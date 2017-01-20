@@ -1,0 +1,56 @@
+\documentclass{dissertation}
+
+\usepackage[backend=biber, style=ieee]{biblatex}
+\addbibresource{dissertation.bib}
+
+\begin{document}
+
+%% Specify the title and author of the thesis. This information will be used on
+%% the title page (in title/title.tex) and in the metadata of the fi\dfrac{num}{den}l PDF.
+\title{Planetary-scale surface water detection from space}
+\author{Gennadii}{Donchyts}
+
+%% Use Roman numerals for the page numbers of the title pages and table of contents.
+\frontmatter
+
+\include{00.1-title/title}
+
+%% The (optional) dedication can be used to thank someone or display a significant quotation.
+\dedication{\epigraph{...}{}}
+
+\tableofcontents
+
+\include{00.2-summary/summary}
+
+\include{00.3-preface/preface}
+
+%% Use Arabic numerals for the page numbers of the chapters.
+\mainmatter
+
+
+%% Turn on thumb indices.
+\thumbtrue
+
+\include{01.1-introduction/introduction}
+\include{01.2-canny-otsu/canny-otsu}
+\include{01.3-change-detection/change-detection}
+\include{01.4-data-fusion/data-fusion}
+\include{01.5-kmeans/k-means}
+\include{01.6-hand/hand}
+\include{01.7-aqua-monitor/aqua-monitor}
+\include{01.8-water-murray-darling/water-australia-osm.tex}
+\include{02.1-conclusions/conclusion}
+\include{02.2-acknowledgments/acknowledgments}
+
+%% Use letters for the chapter numbers of the appendices.
+\appendix
+
+%\include{02.3-appendix/appendix-a}
+	
+%% Turn off thumb indices for unnumbered chapters.
+\thumbfalse
+
+\printbibliography
+
+\end{document}
+

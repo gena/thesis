@@ -1,0 +1,4 @@
+pdflatex dissertation
+biber dissertation
+pdflatex dissertation
+pdflatex dissertation
