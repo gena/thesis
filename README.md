@@ -1,5 +1,2 @@
-# Writing Plan
+# Planetary-scale Surface Water Detection from Space
 
- - [X] First todo
- - [ ] Second todo
- - [ ] Third todo
