@@ -57,7 +57,18 @@
 % \usepackage[disable]{todonotes} % notes not showed
 \usepackage[draft]{todonotes}   % notes showed
 
-    
+
+\newcounter{mycomment}
+\newcommand{\mycomment}[2][]{%
+	% initials of the author (optional) + note in the margin
+	\refstepcounter{mycomment}%
+	{%
+		\setstretch{0.7}% spacing
+		\todo[color={red!100!green!33},size=\small]{%
+			\textbf{Comment [\uppercase{#1}\themycomment]:}~#2}%
+}}
+
+\setlength{\marginparwidth}{2cm}    
 
 \begin{document}
 
