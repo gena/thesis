@@ -1,7 +1,7 @@
 @echo off
 echo Deleting output ...
 
-del /q *.aux *.log *.pdf *.out *.bcf *.bbl *.blg *.toc *.txss *-blx.bib *.run.xml *.synctex.gz
+del /q *.aux *.log *.pdf *.out *.bcf *.bbl *.blg *.toc *.txss *-blx.bib *.run.xml *.synctex.gz *.bak
 
 del /q 00.1-title\*.aux
 del /q 00.2-summary\*.aux

@@ -1,0 +1,204 @@
+\chapter{Surface water detection source code}
+
+%% Start the actual chapter on a new page.
+\newpage
+
+\section{Local Otsu thresholding using Canny edge filter}
+
+
+\begin{lstlisting}[language=Java, basicstyle=\tiny]
+
+/***
+ * Computes the threshold that maximizes interclass variance.
+ */
+
+var otsu = function otsu(histogram) {
+    histogram = ee.Dictionary(histogram);
+
+    var counts = ee.Array(histogram.get('histogram'));
+    var means = ee.Array(histogram.get('bucketMeans'));
+    var size = means.length().get([0]);
+    var total = counts.reduce(ee.Reducer.sum(), [0]).get([0]);
+    var sum = means.multiply(counts).reduce(ee.Reducer.sum(), [0]).get([0]);
+    var mean = sum.divide(total);
+
+    var indices = ee.List.sequence(1, size);
+
+    // Compute between sum of squares, where each mean partitions the data.
+    var bss = indices.map(function (i) {
+        var aCounts = counts.slice(0, 0, i);
+        var aCount = aCounts.reduce(ee.Reducer.sum(), [0]).get([0]);
+        var aMeans = means.slice(0, 0, i);
+        var aMean = aMeans.multiply(aCounts).reduce(ee.Reducer.sum(), [0]).get([0]).divide(aCount);
+        var bCount = total.subtract(aCount);
+        var bMean = sum.subtract(aCount.multiply(aMean)).divide(bCount);
+        return aCount.multiply(aMean.subtract(mean).pow(2)).add(bCount.multiply(bMean.subtract(mean).pow(2)));
+    });
+
+    // Return the mean value corresponding to the maximum BSS.
+    return means.sort(bss).get([-1]);
+};
+
+/***
+ * Compute local threshold assuming bimodal distribution.
+ */
+
+function computeThresholdUsingOtsu(image, scale, bounds, th, g, skipShort, weightGradient, minValue) {
+    // clip image edges
+    var mask = image.mask().gt(0).focal_min(ee.Number(scale).multiply(3), 'circle', 'meters');
+
+    // detect sharp changes
+    var edge = ee.Algorithms.CannyEdgeDetector(image, th, g);
+    edge = edge.multiply(mask);
+    
+    // take the largest changes, estimate gradient around edge and use that as a weight
+    if (weightGradient) {
+        var gradient = image.gradient().abs();
+        var edgeGradient = gradient.select(0).max(gradient.select(1)).mask(edge.gt(th)).reproject(image.projection().scale(2, 2));
+
+        // take the upper percentiles only
+        var mode = ee.Number(ee.Dictionary(edgeGradient.reduceRegion(ee.Reducer.mode(), bounds, scale)).values().get(0));
+        var _buckets = 50;
+        
+        var significantEdgesMask = ee.Algorithms.If(
+            ee.Algorithms.IsEqual(mode, null), 
+            edge.mask(), 
+            edgeGradient.gt(mode)
+        );
+
+        edge = ee.Image(ee.Algorithms.If(
+            ee.Algorithms.IsEqual(mode, null), 
+            edge,
+            edge.updateMask(significantEdgesMask))
+        );
+
+        if (debug) {
+            // gradient around edges
+            if (edgeGradient) {
+                print(ui.Chart.image.histogram(edgeGradient, bounds, scale, _buckets));
+                Map.addLayer(edgeGradient, {}, 'edge gradient', false);
+                Map.addLayer(significantEdgesMask.mask(significantEdgesMask), {}, 'significant edges', false);
+
+                print('Mode: ', mode);
+            }
+        }
+    }
+
+    // advanced, detect edge lengths
+    var coonnectedVis = void 0;
+    if (skipShort) {
+        var connected = edge.mask(edge).lt(0.8).connectedPixelCount(50, true);
+        var edgeLong = connected.gte(50);
+        edge = edgeLong;
+        coonnectedVis = connected.updateMask(edgeLong).visualize({ palette: ['ffffff', 'ff0000'], min: 0, max: 50 });
+    }
+
+    // buffer around NDWI edges
+    var edgeBuffer = edge.focal_max(ee.Number(scale).multiply(1), 'square', 'meters');
+    var imageEdge = image.mask(edgeBuffer);
+
+    // compute threshold using Otsu thresholding
+    var buckets = 100;
+    var hist = ee.Dictionary(ee.Dictionary(imageEdge.reduceRegion(ee.Reducer.histogram(buckets), bounds, scale)).values().get(0));
+
+    var threshold = ee.Algorithms.If(hist.contains('bucketMeans'), otsu(hist), 0);
+    threshold = ee.Number(threshold); //.add(0.05)
+
+    if (debug) {
+        Map.addLayer(edge.mask(edge), { palette: ['ff0000'] }, 'edges', false);
+
+        if (skipShort) {
+            Map.addLayer(coonnectedVis, {}, 'edges (connected)', false);
+        }
+
+        print('Threshold: ', threshold);
+
+        print(ui.Chart.image.histogram(image, bounds, scale, buckets));
+        print(ui.Chart.image.histogram(imageEdge, bounds, scale, buckets));
+        Map.addLayer(mask.mask(mask), { palette: ['000000'] }, 'image mask', false);
+    }
+
+    return {
+      threshold: minValue ? threshold.max(minValue) : threshold,
+      edge: edge
+    }
+}
+
+\end{lstlisting}
+
+\newpage
+
+\section{Perona-Malik filter: anisotropic diffusion}
+\label{listing:perona-malik}
+
+\begin{lstlisting}[language=Java, basicstyle=\tiny]
+/***
+ * Solves anisotropic diffusion equation using CFD:
+ *
+ *   I(n+1, i, j) = I(n, i, j) + lambda * (cN * dN(I) + cS * dS(I) + cE * dE(I), cW * dW(I))
+ *
+ */
+ 
+var peronaMalikFilter = function(I, iter, K, method) {
+    var dxW = ee.Kernel.fixed(3, 3,
+                           [[ 0,  0,  0],
+                            [ 1, -1,  0],
+                            [ 0,  0,  0]]);
+  
+  var dxE = ee.Kernel.fixed(3, 3,
+                           [[ 0,  0,  0],
+                            [ 0, -1,  1],
+                            [ 0,  0,  0]]);
+  
+  var dyN = ee.Kernel.fixed(3, 3,
+                           [[ 0,  1,  0],
+                            [ 0, -1,  0],
+                            [ 0,  0,  0]]);
+  
+  var dyS = ee.Kernel.fixed(3, 3,
+                           [[ 0,  0,  0],
+                            [ 0, -1,  0],
+                            [ 0,  1,  0]]);
+
+  var lambda = 0.2;
+
+  if(method == 1) {
+    var k1 = ee.Image(-1.0/K);
+
+    for(var i = 0; i < iter; i++) {
+      var dI_W = I.convolve(dxW)
+      var dI_E = I.convolve(dxE)
+      var dI_N = I.convolve(dyN)
+      var dI_S = I.convolve(dyS)
+      
+      var cW = dI_W.multiply(dI_W).multiply(k1).exp();
+      var cE = dI_E.multiply(dI_E).multiply(k1).exp();
+      var cN = dI_N.multiply(dI_N).multiply(k1).exp();
+      var cS = dI_S.multiply(dI_S).multiply(k1).exp();
+  
+      I = I.add(ee.Image(lambda).multiply(cN.multiply(dI_N).add(cS.multiply(dI_S))
+           .add(cE.multiply(dI_E)).add(cW.multiply(dI_W))))
+    }
+  }
+  else if(method == 2) {
+    var k2 = ee.Image(K).multiply(ee.Image(K));
+
+    for(var i = 0; i < iter; i++) {
+      var dI_W = I.convolve(dxW)
+      var dI_E = I.convolve(dxE)
+      var dI_N = I.convolve(dyN)
+      var dI_S = I.convolve(dyS)
+      
+      var cW = ee.Image(1.0).divide(ee.Image(1.0).add(dI_W.multiply(dI_W).divide(k2)));
+      var cE = ee.Image(1.0).divide(ee.Image(1.0).add(dI_E.multiply(dI_E).divide(k2)));
+      var cN = ee.Image(1.0).divide(ee.Image(1.0).add(dI_N.multiply(dI_N).divide(k2)));
+      var cS = ee.Image(1.0).divide(ee.Image(1.0).add(dI_S.multiply(dI_S).divide(k2)));
+  
+      I = I.add(ee.Image(lambda).multiply(cN.multiply(dI_N).add(cS.multiply(dI_S))
+           .add(cE.multiply(dI_E)).add(cW.multiply(dI_W))))
+    }
+  }
+  
+  return I;
+}
+\end{lstlisting}

@@ -368,10 +368,10 @@
 %% Section titles start with the number in bold, followed by the name printed
 %% in the title color.
 \titleformat{\section}
-    {\Large\headerstyle}
+    {\headerstyle}
     {\bfseries\thesection.\ }
     {0pt}
-    {\color{title}}
+    {\noindent\color{title}}
 %% Sections are preceded by an empty line.
 \titlespacing{\section}{0pt}{\baselineskip}{0pt}
 %% In the table of contents, section names are followed by a line of dots 8pt
@@ -381,7 +381,7 @@
 %% Subsection titles have the same layout as section titles, except in a smaller
 %% font.
 \titleformat{\subsection}
-    {\large\headerstyle}
+    {\headerstyle}
     {\bfseries\thesubsection.\ }
     {0pt}
     {\color{title}}

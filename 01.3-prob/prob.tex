@@ -1,0 +1,343 @@
+\chapter{Probabilistic methods of surface water detection}
+\label{ch3}
+
+\begin{abstract}
+	A method is developed to estimate surface water mask for noisy TOA reflectance images, where water bodies can be only partially visible under thin clouds, haze, fog or snow/ice cover. The presence of these effects increases the need for high accuracy and more frequent observations of surface water bodies, making it essential for rapidly varying surface water bodies such as small reservoirs, wetlands and flood plains. Monitoring these waterbodies at high frequency can for instance be essential to understand changes in availability of water for food, conditions of fisheries, ecosystems, and occurrence of floods.
+
+	Here, a Bayesian Network is used as a framework to introduce the method and finally, to infer the actual surface water area from partially-visible surface water masks. The method makes use of a high-resolution probability density function, which is estimated using a set of cloud-free satellite images from measured by multiple freely available satellite missions from NASA and ESA. I also explore the variability of TOA reflectance values for different land use and atmospheric conditions to estimate cloud and snow detection parameters in an automated manner. The method is validated using in-situ water level measurements.
+	
+	%\url{http://bit.ly/agu16\_reservoirs}
+	
+	\begin{center}
+		\begin{tikzpicture}[every node/.style={inner sep=0,outer sep=0}]
+		\node[draw=none,shade,blur shadow={shadow blur steps=5}] {
+			\includegraphics[width=3in]{01.3-prob/figures/prob-title}
+		};    
+		\end{tikzpicture}
+	\end{center}
+	
+	\textbf{Keywords:} probabilistic graphical models, filling, Bayesian Networks, KDE, inference.
+	
+\end{abstract}
+
+%% Start the actual chapter on a new page.
+\newpage
+
+\subsection{Introduction}
+\dropcap{I}{n} the previous chapters, we saw various methods to detect surface water at high accuracy. However, when a waterbody is partially invisible, for example, due to clouds or missing pixels, these methods are insufficient to estimate the actual surface water. In this case, more advanced methods are required to fill missing pixels. In this chapter, this problem is addressed by making use of probabilistic graphical models, in particular, by formulating the task of inferring the most probable water mask in the form of a simple Bayesian Network. 
+
+The general idea is to combine methods discussed in the previous chapter with the probabilistic estimate of surface water mask using a priori knowledge about surface water. This will be done by generating a joint probability density function using surface water estimates based on images where accurate surface water mask can be generated. 
+
+This turns our task of detecting surface water from satellite data into a generative class of models, where the most probable surface water mask is generated using density function in contrast to the discriminative way of processing of satellite data. 
+
+Additionally, a probabilistic graphical model (PGM) notation is used to reason about steps required to estimate (or infer) the actual surface water mask from available raw satellite data.
+
+\section{Probabilistic graphical models}
+
+Probabilistic graphical models \cite{koller2009probabilistic} is a rich framework for encoding probability distributions over complex domains, in the form of univariate or multivariate (joint) distributions. Random variables and their conditional dependencies are then expressed in the form of a graph, where child nodes are usually represented by conditional probability distributions (CPDs, either defined analytically or in a tabular form), and root nodes are represented by marginal distributions. Two commonly used types of PGMs are Bayesian Networks (BN) and Markov Random Fields (MRF). However, many other types of PGMs exists today, such as Conditional Random Fields (CRF), factor graphs, restricted Boltzmann machines and many other.
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+	\begin{center}
+		\includegraphics[width=0.3\textwidth]{01.3-prob/figures/bn_example} 
+	\end{center}
+	\caption{An example of a simple Bayesian network.}
+	\label{fig:bn_example}
+\end{wrapfigure}
+
+Here, a Bayesian network notation is used, which is usually expressed in the form of a directed acyclic graph (DAG). Let's consider an example of a simple network as shown in \ref{fig:bn_example}. Here, $X_{1...3}$ nodes represent random variables and the shaded variable $X_2$ indicates a variable which is measured. 
+
+The root nodes of the graph of a BN are defined as marginal distributions, which are in general expressed as single-variable probability distribution functions (PDFs), and all child nodes can be then represented as conditional probability distributions (CPDs), which can be expressed as multivariate probability distribution functions. 
+
+This DAG can be then used to conduct statistical inference, for example, to infer the unknown variables $X_3$ and $X_1$ by making assumptions about their distributions. At the same time, satisfying available (measure) distribution of $X_2$. The joint distribution of this BN can be then expressed (factorized) as:
+
+\begin{equation}
+P{(X_1, X_2, X_3)} = P{(X_1)} P{(X_2 \mid X_1)} P{(X_3 \mid X_1, X_2)}
+\end{equation}
+
+or in a general form:
+
+\begin{equation}
+P{(X_i, \ldots, X_n)} = \prod_{i=1}^{n} P{(X_i \mid S_i)}
+\end{equation}
+
+where $S_i$ represents a set of parents of every node $X_i$.
+
+After defining the model, many types of questions can be answered, by means of direct inference methods, such as conditioning parent variables and computing resulting distributions of dependent variables, marginalization - deriving marginal distribution by integrating on some variables,  or by applying methods of learning to simulate the graph as the whole and to infer hidden variables.
+
+Many methods exist today to perform inference in BNs, such as Markov Chain Monte Carlo (MCMC), or Expectation Minimization. The main goal of these methods is to estimate unknown distributions from known variables and hypothetic relations between them. Many examples of PGMs as well as methods used to conduct inference in BNs are given in \cite{koller2009probabilistic}. 
+
+\section{Plate notation}
+
+One of a useful notation used for BNs is a \textit{plate notation}, which allows grouping of multiple random variables of a similar type. This way, more complex models can be expressed on the network, as shown in Figure \ref{fig:plate-example}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{01.3-prob/figures/plate_example}
+	\caption{An example of the use of plate notation (right) for Naive Bayes classifier graphical model (left).}
+	\label{fig:plate-example}
+\end{figure}
+
+The above graph, in fact, represents a model of a Naive Bayes classifier, where the random variable $w$ represents a distribution of some feature belonging to some class, given a set of independent variable $X_i$ with a known conditional distributions $P{(X_i|w)}$. During training, the model variables $X_i$ ()conditional distributions) are defined and during inference - the most probable class is selected, for example, by estimating maximum a posteriori probability.
+
+\section{Discriminative vs. Generative methods}
+
+In machine learning, the generative model is defined as a model where some variable values are generated from a joint probability density function. Generative models differ from discriminative models in a way that they require the use of joint probability density function to be constructed, while discriminative models provide a way to model only the target variables conditioned on observed variables \citep{ng2002discriminative}. Some examples of generative models include Naive Bayes classifier, Gaussian Mixture Model, Hidden Markov Model while examples of discriminative models are Logistics Regression, Support Vector Machines, or Conditional Random Fields. 
+
+The method presented in this chapter can be classified as a generative, in terms that the joint probability density function is estimated for pixels belonging to water $P(x, y)$. However, it will be estimated in a discriminative way, by combining surface water masks detected from cloud-free images, as was discussed in the previous chapter.
+
+\section{Probabilistic nature of the satellite observations}
+
+Here, the multispectral satellite observations are expressed in the form of a Bayesian network, to allow better reasoning about the methods used to detect surface water changes. Even though, standard algorithms usually used to reconstruct marginal distributions were not applied, the framework is a very rich way to express and explain probabilistic surface water inference methods introduce later in this chapter.
+
+In multispectral remote sensing using satellites, we can think of observed radiance or reflectance values as random variables. In fact, the observed values represent a joint distribution in a multidimensional space (time, space, wavelength). Even though most of the sensors provide a 2D surface radiance values, the actual values are reflected from 3D Earth's surface. The actual values, measured at-the-sensor represent a signal, backscattered from the ground (frequently represented by non-Lambertian surfaces), aerosol particles. The actual path of the light is extremely difficult and may be impossible to model in a deterministic way. Interpreting this signal using probabilistic models makes more sense.
+
+For passive multispectral satellite sensors, the most important factors disturbing the resulting radiance values are clouds and topographic effects. While many algorithms (models) exist to detect clouds, modeling complex interaction of cloud and hill shadows, thin clouds, fog or haze is extremely difficult. Additionally, physical parameters of the sensors, such as spatial and radiometric resolution, result in that our observations represent mixed signal, reflected from multiple surfaces, such as different types of soil, water, vegetations. Furthermore, surface water pixels may be fully or partially covered by snow and ice.
+
+In Figure \ref{fig:pgm} the most important variables which influence the observed signal are reflected. Note, that the observed variables are shown as shaded circles and that wavelength, time and space ($x \in \mathbb{R}^2$) are defined using plate notation.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.3-prob/figures/probabilistic_model} 
+	\caption{Probabilistic graphical model (Bayesian Network) for passive multispectral satellite sensor.}
+	\label{fig:pgm}
+\end{figure}
+
+A more general task of remote sensing can be defined as a classification (assigning labels) of the hidden (or latent) variable $Y_{class}$ for every land-use type observed by the satellite. Clouds are introduced as a separate variable $C$, to stress, that it represents a noise and is not mixed with the actual land use type hidden under the clouds or distorted by the cloud shadows. 
+
+To indicate a complex light interaction between aerosols and Earth's surface topography, a separate random variable $Z$ is added. It is a random variable, because it is never measured exactly, and may be significantly noised for most existing global digital elevation datasets, such as 30m SRTM or 3m NED. These errors can be very large (sometimes ~50m) and may result in an incorrect interpretation of the observed pixels when used, for example, to model illumination effects, like it was shown in Chapter \ref{ch1}.
+
+Sun parameters, $S_\phi$ and $S_\theta$ represent Sun's azimuth and elevation at the time, when the image was acquired, and are usually very accurate, maybe it would be even more appropriate to introduce them as parameters instead of random variables.
+
+Sun's light interacts with clouds and topography, which results in that the signal gets distorted, which is expressed by the variables $C_s$, $Z_s$, which may indicate the amount of light scattered and absorbed.
+
+The arrow lines between these variables represent conditional dependencies. For example, conditional probability representing the amount of light influenced by cloud shadows can be defined as: $P(C_s|Z,S_\phi,S_\theta,C)$. Here, the cloud shadow variable dependents on the topography because the actual illumination usually changes depending on the cloud height, which in its turn depends on the actual elevation at that location.
+
+To reconstruct (infer) unknown variables, one can try to simulate the joint probability for this PGM factorized as:
+
+\begin{equation}
+\begin{split}
+\begin{aligned}
+P{(L_{\lambda_1}, ... L_{\lambda_N}, C, C_s, Z, Z_s, S_\phi, S_\theta, Y_{class_1} ... Y_{class_M})} &= P(Y_{class_1}) ... P(Y_{class_M}) \\
+& P{(C)} P{(S)} P({C_s)} P{(S_\theta)} P{(S_\phi)}  P{(Z_s)} P{(Z)} \\ 
+& P{(C_s \mid C,S_\theta,S_\phi,Z)}  P{(Z_s|Z,S_\theta, S_\phi)}
+\end{aligned}
+\end{split}
+\label{eq:bn-joint}
+\end{equation}
+
+with $N$ bands $\lambda$ and $M$ classes $class$ defined as:
+
+\begin{equation}
+\begin{split}
+\begin{aligned}
+\lambda &= \{blue, green, red, nir, swir1, swir2, temp\} \\
+class &= \{water, snow, sand, vegetation, urban, ...\}
+\end{aligned}
+\end{split}
+\end{equation}
+
+Note, that in addition to the class and wavelengths dimensions, most of the variables also depend on space and time, which is indicated as indices of the corresponding plates. 
+
+While variables $Y_{class}$ can be simulated as discrete variables, with a corresponding probability mass function, representing probability of a pixel belonging to a given class, we can also think of it as a continuous variable, defined for every class separately and indicating probability of a pixel fraction (varying from 0 to 1) belonging to a given land use class. Many of the variables in the above equation are known or partially known as well as their error, however, it may be difficult to simulate the whole joint distribution using standard methods (MCMC), mainly because of the amount of data to be processed.
+
+For the water detection task, we are interested in the reconstruction of $P(C_{water})$ distribution, or more generally - as a multivariate distribution $P(C_{water}, x, y)$, marginalized on time and representing the probability of water in every pixel of a given area for some specific period. It is important to note that this can be done only under the assumption, that morphology of the waterbody does not change during the selected period. For more complex configurations, this density function should be assumed as a time-dependent function. For example, to represent seasonal surface water variability. 
+
+One of the methods to infer this water distribution, as well as other latent variables in the above graphical model is to estimate them in a discriminative way, directly from the observed reflectance values measured by satellite sensors. With sufficient measurement and under the assumption that morphology of the waterbody does not change significantly, we should be able to condition our joint distribution \ref{eq:bn-joint} into subsets where clouds are present and absent. Also, instead of integrating this joint distribution - marginalizing to estimate $P(C_{water}, x, y)$, it can be directly computed by making use of the methods described in Chapter \ref{ch2} and estimating the frequency of pixels to be covered by water of land based on the estimated surface water masks.
+
+An alternative can be to fully simulate the above graphical model by introducing some analytical models, like FMask or topographic correction formulas from Chapter \ref{ch1} to simulate the CPDs representing cloud and hill shadows. After the reconstruction, standard methods used for BNs can be applied to infer all other unknown land-use class variables $P(C_{class})$.
+
+%\url{http://sci-hub.cc/10.1111/j.1467-9876.2010.00739.x}
+%\url{https://courses.engr.illinois.edu/cs543/sp2011/lectures/Lecture\%2012\%20-\%20MRFs\%20and\%20Graph\%20Cut\%20Segmentation\%20-\%20Vision_Spring2011.pdf}
+
+\subsection{Sampling spectral reflectance values from multi-temporal Landsat images for water and land pixels}
+
+In many cases, distributions of the marginal variables introduced in Figure \ref{fig:pgm} are unknown and may represent very dynamic processes co-occurring at the same time. To demonstrate this complexity, N=100 locations are sampled for the area outlined in Figure \ref{fig:study-area-PC}, and then, using only area covering mainly surface water, in the middle of the reservoir. Because surface water of the reservoir changes in time, but also, because image registration may be imperfect, it is hard to ensure that all sampled values correspond to water or atmospheric effects. However, it should be sufficient to demonstrate the variability of the processes which occur during 30 years.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth,left]{01.3-prob/figures/map-ProsserCreekReservoir-sampling-area}
+	\caption{Sampling area used for scatter plots, Prosser Creek Reservoir, CA, USA}
+	\label{fig:study-area-PC}
+\end{figure}
+
+\begin{figure}[H]
+	\includegraphics[width=1.0\textwidth,left]{01.3-prob/figures/sampled_water_clouds_snow}
+	\caption{TOA reflectance values sampled over the study area but covering mainly water pixels.}
+	\label{fig:prob-sampled-water-cloud-snow}
+\end{figure}
+
+\begin{figure}[H]
+	\includegraphics[width=1.0\textwidth,left]{01.3-prob/figures/sampled_water_soil_clouds_snow}
+	\caption{TOA reflectance values sampled over study area (water and soil pixels) from all Landsat images available for that area (N=930).}
+	\label{fig:prob-sampled-water-soil-cloud-snow}
+\end{figure}
+
+\begin{figure}[H]
+	\includegraphics[width=1.0\textwidth,left]{01.3-prob/figures/sampled_water_soil}
+	\caption{TOA reflectance values after conditioning on cloud and snow cover.}
+	\label{fig:prob-sampled-water-soil}
+\end{figure}
+
+
+The resulting scatter matrix plots, colored as a false-color image using swir1, nir, and green bands, are shown in figures \ref{fig:prob-sampled-water-cloud-snow} and \ref{fig:prob-sampled-water-soil-cloud-snow}, for water-only pixels and water plus soil pixels. Additionally, the density of the pixels for every scatter plot in the lower triangle is analyzed. The reasoning for this exercise is to try to see if different classes can be learned from these distributions or at least to  identify the most occurring values in the case of water, soil, clouds or snow occurrences. It is interesting to see that for this area, the distance between the most occurring values which can be used to separate water and land correspond to nir and green bands. However, also, that the temperature band shows a lot of variabilities, where temperature values are formed by the presence of snow, soil, and water in pixels (three peaks in the histogram of the temperature band). In fact, given the directed graph above. The Figure \ref{fig:prob-sampled-water-cloud-snow} represents a joint distribution, conditioned on some of the variables, in this case, on $P(C_{water}=1)$. In can also be seen, that reflectance values for clouds and snow vary significantly in contrast to lower reflectance values in the case of water or soil. 
+
+By sampling values in the center of the reservoir and the area, covering water and the nearby land, some of the parameters can be automatically reconstructed from these distributions to be then used in a combination with classical remote sensing methods for cloud detection, such as ACCA or FMask. Adjusting the actual thresholds used in these methods with more objective parameters, it should be possible to automatically identify fully cloud-free images, and then use them to simulate the marginal distribution representing water occurrence. 
+
+Here, this approach is used to adjust threshold values used to estimate clouds and snow scores, to identify the most cloud-free images over the reservoir area (in fact, conditioning the joint distribution for $L$ on a $C=0$). These cloud-free images are used to reconstruct the marginal distribution $P(C_{water}, x, y))$ for a given time interval, assuming that the water dynamics under the clouds looks similar to when there are clouds.
+
+\section{Probabilistic filling of missing pixels in surface water detection}
+
+One of the ways to solve the problem of missing pixel filling, or to remove the less probable false-positive water pixels is to make use of the a priori information about surface water dynamics. By adjusting cloud (or snow/ice) detection algorithms with the local statistics, we can identify images where the number of bad or missing pixels is small, resulting in very accurate water masks. The figures \ref{fig:prob-water-isolines} and \ref{fig:prob-water-density} show edges for several of these water masks and a 2D probability density image estimated from these water masks.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{01.3-prob/figures/contour_lines}
+	\caption{Surface water mask detected from cloud-free images (multiple sensors). The images were resampled using bicubic interpolation before the actual mask was detected. This has resulted in a better final water occurrence.}
+	\label{fig:prob-water-isolines}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\textwidth]{01.3-prob/figures/water_occurrence}
+	\caption{Water occurrence (prior) estimated from cloud-free images measured by multiple satellites (ASTER, Sentinel-2, and Landsat)}
+	\label{fig:prob-water-density}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{01.3-prob/figures/method-diagram}
+	\caption{A high-level workflow of the surface water detection method}
+	\label{fig:prob-workflow}
+\end{figure}
+
+The method to fill surface area for missing pixels is then based on the use of this probability density image to infer water mask, employing Bayes rule. The actual algorithm involves a few more steps, where the reconstructed water PDF is also used during edge detection (less probable water edges are removed). The resulting algorithm, outlined in Figure \ref{fig:prob-workflow} allows automated estimation of reservoir surface area using both cloud-free and partially cloud-free images. 
+
+In fact, the inference step of the algorithm can be schematically visualized as in \ref{fig:prob-diagram}, where on the left side, the original graph is shown, with all irrelevant variables removed. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.4\textwidth]{01.3-prob/figures/probabilistic_model_single_scene}
+	\caption{An example of a BN for a single scene, assuming marginal distribution on the left side estimated during the previous step.}
+	\label{fig:prob-diagram}
+\end{figure}
+
+During the first step, where the water probability density function was estimated, the Landsat 7 and Sentinel-1 images were excluded, because of SLC-OFF errors and because SAR water detection algorithm may be less reliable, and because of effects like Bragg scattering, resulting in false-negative pixels.
+
+In many cases, slightly better results are achieved for noise-free pixels when compared to probabilistic estimate (our prior is never perfect), additional step was added to choose between generative surface water estimate and the one performed using discriminative methods. The choice between different water masks detected using generative (density function) and discriminative (dynamic thresholding) methods is made based on the quality of the pixels, which depends on cloud and snow scores. For a very hilly topography, it may be required to make use of $Z_s$ as well, to avoid misclassification of hill shadows as water pixels.
+
+\section{Application to the Reservoir surface water area reconstruction}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_NDWI_3_Otsu_prior}
+	\caption{Canny/Otsu, probabilistic update}
+	\label{fig:r1_canny_otsu_nb}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_NDWI_2_Otsu_HAND_prior}
+	\caption{Canny/Otsu, HAND < 15, probabilistic update}
+	\label{fig:r1_canny_otsu_hand_nb}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_NDWI_4_Otsu_HAND_prior_fill}
+	\caption{Canny/Otsu, probabilistic update, HAND < 15, fill}
+	\label{fig:r1_canny_otsu_hand_nb_fill}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_NDWI_4_Otsu_HAND_topo_prior_fill}
+	\caption{topographic, Canny/Otsu, probabilistic update, HAND < 15, fill}
+	\label{fig:r1_canny_otsu_topo_hand_nb_fill}
+\end{figure}
+
+A hybrid, stepwise method, combining image processing algorithms and remote sensing methods would be a more appropriate for the accurate estimation of water mask.
+
+\newpage
+
+
+\section{Measuring performance of surface water detection with filling applied}
+
+To evaluate the overall multi-step algorithm performance, where a combination of the dynamic thresholding and the generative estimation of surface water mask were involved, the final surface water area values are compared with the surface water area estimates computed using the statistical model introduced in Chapter \ref{ch2}. 
+
+Additionally, surface water masks which did not pass quality criteria were excluded. The quality score was defined as a combination of multiple parameters, such as the fraction of false-positive, false-negative pixels, and the number of cloud and snow pixels. 
+
+The final surface water area time series, together with the original surface area, estimated from only optical satellite images and NDWI=0, are shown in Figure \ref{fig:prob-results}.
+
+To further explore the quality of the estimates, a residuals analysis is performed for the final results, comparing them to the estimates based on the model constructed for the reservoir. We can see from the figures, that the errors are mostly normally distributed, $RMSE=0.059km^2$, indicating good performance of the algorithm.
+
+While the use of spectral indices with fixed threshold can be a simple way to estimate surface water mask for cloud-free multispectral imagery. 
+
+In the case of aerosol presence, the actual threshold variability of the spectral indices makes them less applicable, resulting in much larger variation of the surface water mask estimates. On the other hand, the use of step-wise approach introduce in the last two chapters, provides a way to automatically detect surface water with a very high accuracy.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.3-prob/figures/results}
+	\caption{Comparison of estimated surface water area $A$ vs. simulated surface water $A*$, based on linear regression constructed previously. Scatter plots (a, b) show results of the surface water detection algorithm, without (a) and with (c) probabilistic filling. Time series charts (b, d) correspond to estimated (dots) and measured surface water area values.}
+	\label{fig:prob-results}
+\end{figure}
+
+\subsection{Analysis of residual and outliers}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.3-prob/figures/residuals}
+	\caption{Analysis of residuals (surface area estimated from satellite images vs. surface area estimated from the linear model). The top chart (a) compares time series estimated from water level measurements and satellite photos (dots), as well as outliers ($\epsilon > \sigma$). Chart (b) shows residuals values, assuming surface water area A* as the ground truth. Scatter plots (c, d) show a comparison of measured water level and estimated surface water area (c) vs. water levels and A/A* plot (d). The chart (e) indicates histogram of residual values (<3\%).}
+	\label{fig:prob-results}
+\end{figure}
+
+%\section{Comparison with the JRC surface water mask dataset}
+%\textbf{compare monthly surface water changes estimated from JRC dataset %(scatter plots, time series and residual analysis)}
+
+\section{Difficult surface water detection examples}
+
+To demonstrate the method performance, figures \ref{fig:prob-guess1}, \ref{fig:prob-guess2}, \ref{fig:prob-guess3} demonstrate a few examples where the surface water mask estimate is particularly difficult, but using the method presented here, an almost perfect water mask can be reconstructed, when compared to the observed water level values. 
+
+The first example in Figure \ref{fig:prob-guess1} illustrates the algorithm performance for the case, where the reservoir is almost fully covered by clouds, only a small area in the upper part of the reservoir can be seen. However, because these pixels are located in a very flat area, where water surface area changes correlate a lot with the water level changes, accurate estimates of the actual surface area could be made by utilizing the density function constructed above. This case may result in larger errors in some reservoirs where large morphological changes may take place in the river. In this case, our prior distribution used to provide posterior estimates is less informative, or even incorrect. In this case, it would be more appropriate to utilize the temporal variability of the surface area. This is relatively easy to achieve by constructing the water occurrence distribution as a three-dimensional, instead of a two-dimensional - $P(C_{water}) = f(x,y,t)$, where the probability of water at a given location may change in time as well. 
+
+\afterpage{%
+	\begin{figure}
+		\centering
+		\includegraphics[width=0.8\textwidth]{01.3-prob/figures/guess1_clipped.png}
+		\caption{Surface water reconstructed from a small amount of visible water at the edge of the reservoir. Visible water pixels are located in a dynamic part of the reservoir.}
+		\label{fig:prob-guess1}
+	\end{figure}
+	
+	\begin{figure}
+		\centering
+		\includegraphics[width=0.8\textwidth]{01.3-prob/figures/guess2_clipped.png}
+		\caption{Surface water reconstructed from a Sentinel-2 image with a very dark cloud shadow present. False-positive surface water detected during first pass (\textcolor{red}{red}) is corrected after the use of Bayesian update step.}
+		\label{fig:prob-guess2}
+	\end{figure}
+	
+	\begin{figure}
+		\centering
+		\includegraphics[width=0.8\textwidth]{01.3-prob/figures/guess3_clipped.png}
+		\caption{Surface water mask reconstructed from Sentinel-1 SAR image. A very limited number of pixels are visible in a steep part of the reservoir.}
+		\label{fig:prob-guess3}
+	\end{figure}
+	\clearpage
+}
+
+The Figure \ref{fig:prob-guess2} shows the case, where the original surface water mask estimate is incorrect for the pixels, where a very dark cloud shadow is present. The image was acquired at relatively low sun elevation, resulting in lower reflectance values and a very evident cloud shadow. In fact, looking at the values NDWI of the pixels corresponding to water and cloud shadow only it was impossible to detect surface water mask reliably. In this situations, as well as in the case of SLC-OFF images, the surface water mask can be very accurately estimated because a strong correspondence between water occurrence and detected surface water edges is expected to occur.
+
+A bit more difficult case can be seen in Figure \ref{fig:prob-guess3}, where a small part of the Sentinel-1 SAR backscatter intensity image is used to estimate surface water. The challenge here lies in the fact that this part of the reservoir is relatively steep, resulting in much higher chance of an incorrect surface water area estimates. Another challenge here is related to the presence of a very dark edge present in the Sentinel-1 image, which was excluded by excluding low entropy areas along the image edges. 
+
+Density-based methods may be extremely useful, when waterbody is partially covered by clouds, cloud shadows, or when only part of a waterbody is visible, due to limited swath or due to sensor artifacts (SLC-OFF for Landsat 7). 
+
+\section{Conclusions and Discussion}
+
+In Chapter \ref{ch2}, it was demonstrated that automated surface water detection from multiple multispectral missions is feasible, however, the surface water detection from noisy satellite images remained difficult. Where such noisy images are frequently occurring (e.g. in predominantly clouded regions) or where a high frequent observations are required, the applicability of the method presented in Chapter \ref{ch2} is limited and a more advanced methods are required. 
+
+The surface water detection from noisy satellite images can be very difficult. In this chapter, it is shown that even when a small part of a surface water body is observed and the remainder obscured, the rest of the surface water body can be inferred, by analyzing historical imagery in which accurate estimates of the surface water body were established. The accuracy of the final surface water mask depends on how informative the observed surface water area is, which directly depends on how many changes (inter- or intra-annual) occur to the surface water at a given location.
+
+The historical imagery is introduced in the water classification algorithm through Bayesian inference. However, this also assumes independence of the observations from each other, resulting in overestimation or underestimation of surface water area in several cases, such as very noisy images with multiple types of noise present: snow, clouds, shadows or very noisy backscatter data, caused by the presence of aerosols in the atmosphere. To overcome these problems, many other methods can also be applied such as Hidden Markov Models (HMM), where transition probability can be estimated based on multiple historical observations.
+
+Essentially, the method presented in this chapter also allows to enhance the spatial resolution of the final estimated water mask. This is done by combining surface water masks from multiple sensors, with the spatial resolution varying between 10m (Sentinel-2) up to 30m (for Landsat). The final density function was estimated at the resolution of 5m combined with the bicubic resampling applied to the images to interpolate values. Even though the actual spectral signature gets damaged at sub-pixel level, it was possible to get a very accurate surface water mask estimates due to the use of local dynamic thresholding methods introduced in Chapter \ref{ch2}.
+
+The framework presented in this chapter can also be used in combination with a more general image segmentation methods instead of local thresholding. Alternatives may include image segmentation algorithms such as local k-means (SLIC, \citep{achanta2012slic}), combined with methods such as Markov Random Fields (MRF) or Conditional Random Fields (CRF) to infer the actual land use types based on the spatial neighborhood and temporal variability of reflectance values.

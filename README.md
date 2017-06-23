@@ -1,5 +1,6 @@
-# Writing Plan
+# Questions
 
- - [X] First todo
- - [ ] Second todo
- - [ ] Third todo
+ - [ ] Should OSM be mentioned in more details in the Introduction? Only the last chapter discusse it in details.
+ - [ ] 
+ - [ ] 
+

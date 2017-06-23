@@ -1,7 +1,54 @@
-\documentclass{dissertation}
+\documentclass[print]{dissertation}
+%\documentclass{dissertation}
 
-\usepackage[backend=biber, style=ieee]{biblatex}
-\addbibresource{dissertation.bib}
+%\usepackage{microtype}
+
+\usepackage{amsmath}
+\usepackage{gensymb}
+
+\usepackage{physics}
+
+\usepackage[nodisplayskipstretch]{setspace}
+
+\usepackage{listings}
+
+\usepackage{rotating}
+\usepackage{tabularx} 
+\usepackage{multirow}
+\usepackage{booktabs}
+\newcolumntype{C}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\usepackage{afterpage}
+
+\usepackage{wrapfig}
+
+\usepackage[inline]{enumitem}
+
+\usepackage{mathtools}
+
+\usepackage{contour}
+
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage[export]{adjustbox}
+\usepackage{footnote}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[numbers]{natbib}
+\usepackage{comment}
+
+\usepackage{tikz}
+
+\usetikzlibrary{shadows.blur}
+\usetikzlibrary{shapes.symbols}
+
+\usepackage{tcolorbox}
+\newtcolorbox{highlighted}{colback=yellow}
+
+\usepackage{graphicx}
+%% \usepackage{pgfplots}
+    
 
 \begin{document}
 
@@ -15,42 +62,83 @@
 
 \include{00.1-title/title}
 
-%% The (optional) dedication can be used to thank someone or display a significant quotation.
-\dedication{\epigraph{...}{}}
+\dedication{
+	\epigraph{
+		``Entia non sunt multiplicanda praeter necessitatem.`` \\
+		``Entities should not be multiplied beyond necessity.``
+	}{\textit{--- William of Occam}}
+}
 
 \tableofcontents
 
 \include{00.2-summary/summary}
 
-\include{00.3-preface/preface}
-
 %% Use Arabic numerals for the page numbers of the chapters.
 \mainmatter
-
 
 %% Turn on thumb indices.
 \thumbtrue
 
 \include{01.1-introduction/introduction}
-\include{01.2-canny-otsu/canny-otsu}
-\include{01.3-change-detection/change-detection}
-\include{01.4-data-fusion/data-fusion}
-\include{01.5-kmeans/k-means}
-\include{01.6-hand/hand}
-\include{01.7-aqua-monitor/aqua-monitor}
-\include{01.8-water-murray-darling/water-australia-osm.tex}
+\include{01.2-water-detection/water-detection}
+\include{01.3-prob/prob}
+\include{01.4-change-detection/change-detection}
+\include{01.8-aqua-monitor/aqua-monitor}
+\include{01.9-water-murray-darling/water-australia-osm}
 \include{02.1-conclusions/conclusion}
 \include{02.2-acknowledgments/acknowledgments}
 
 %% Use letters for the chapter numbers of the appendices.
 \appendix
 
-%\include{02.3-appendix/appendix-a}
+\include{01.2-water-detection/appendix-a}
+\include{01.8-aqua-monitor/appendix-a}
 	
+
+\bibliographystyle{dissertation}
+\bibliography{dissertation}
+
 %% Turn off thumb indices for unnumbered chapters.
 \thumbfalse
 
-\printbibliography
-
 \end{document}
+
+
+
+
+\begin{comment}
+* talk to Lourens on IPCC, big issues and trends
+
+
+* check "we ...", change to "I ..." or "it ..." where appropriate
+
+* check Chapter <> chapter 
++ check \ref{ch1} where Chapter needs to be added
+* check Figure <> figure
+* check \ref{fig:} where Figure needs to be added
+
+* rename ch1 to ch1-introduction, etc.
+
+
+* human-made vs man-made? 
+
+* data sets vs datasets?
+* water body / water bodies vs waterbody / waterbodies?
+
+* in order to -> to
+
+* A, m3 -> m2
+
+
+* Introduction IVVV --> 10
+
+
+
+\end{comment}
+
+
+
+
+
+
 

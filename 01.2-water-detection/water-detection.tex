@@ -1,0 +1,447 @@
+\chapter{Surface water detection and dynamic local thresholding}
+\label{ch2}
+
+\begin{abstract}
+
+% PF >>
+The chapter discussed an automated surface water detection method which can be applied globally and without the need for manual adjustments. A new method, based on dynamic local thresholding of spectral water indices, is presented. The method allows accurate detection of surface water from multispectral imagery even in the case of noisy data. The simplicity of the method makes it attractive for large scale applications and therefore can be used to address our research questions focusing on the accurate and high spatiotemporal resolution surface water detection. Applicability of the method for images with significant cloud and snow cover is tested. The method was applied for both TOA and reflectance percentile composite images. Numerous examples demonstrate the applicability of the method as well as its drawbacks.
+% PF <<
+
+\begin{center}
+	\begin{tikzpicture}[every node/.style={inner sep=0,outer sep=0}]
+		\node[draw=none,shade,blur shadow={shadow blur steps=5}] {
+			\includegraphics[width=3in]{01.2-water-detection/figures/title} 
+		};
+
+	\end{tikzpicture}
+
+	% source: https://code.earthengine.google.com/802d139566c47d63a7233109af117aba
+\end{center}
+
+\textbf{Keywords:} NDWI, MNDWI, unsupervised classification, Otsu thresholding, Canny edge filter, snow, clouds, percentile composites.
+
+\end{abstract}
+
+%% Start the actual chapter on a new page.
+\newpage
+
+\section{Introduction}
+
+\dropcap{A}{utomated} methods for surface water dynamics detection from multispectral satellite imagery were widely studied in the last two decades. Many studies were performed to improve the accuracy of water classification and to avoid the need for manual adjustments of thresholds. Early studies include the use of spectral indices and fixed thresholds, such as NDWI \citep{McFeeters1996} and MNDWI \citep{Xu2006}. Recently, many new spectral indices were introduced, such as AWEI \citep{feyisa2014automated}, WI\textsubscript{2006} \citep{homer2004development}, and WI\textsubscript{2016} \citep{fisher2016comparing}. The main goal of these studies was to develop a single multi-band spectral index providing better separability of water from other land-use classes with the most stable threshold.  While many of the studies have demonstrated improved accuracy of water classification for both clear sky and mixed pixels, their aim was mainly focused on the development of a new universal spectral index which can provide a better separability between water and land. Furthermore, most of the method were focusing on the atmospherically corrected imagery and imagery, with little to no noise. 
+
+Multiple studies provide a comprehensive literature overview of surface water detection from satellite imagery. Some of the works propose to categorize the methods of automated surface water detection, for example, \citep{Ji2009} has proposed the next categories:
+\begin{enumerate*}[label=(\emph{\alph*})]
+	\item \label {enum:ji:thematic} thematic classification \citep{lira2006segmentation}
+	\item \label {enum:ji:unmixing} linear unmixing model \citep{sethre2005remote}
+	\item \label {enum:ji:th} single-band thresholding method \citep{jain2005delineation}
+	\item \label {enum:ji:specral} spectral water index method \citep{McFeeters1996, Xu2006, feyisa2014automated, hoberg2015conditional, fisher2016comparing}
+\end{enumerate*}. Later, \citep{yang2015landsat} grouped surface water detection methods using the following five categories: 
+\begin{enumerate*}[label=(\emph{\alph*})]
+	\item \label {enum:yang:manual} digitizing through visual interpretation, a time and labor-consuming strategy which is unrealistic to repeat detection despite its high accuracy
+	\item \label {enum:yang:single} density-slicing of a single band \citep{frazier2000water, ryu2002waterline, white1999monitoring}, which applies a fixed threshold to a given spectral band for water extraction
+	\item \label {enum:yang:ml} supervised or unsupervised classification
+	\item \label {enum:yang:spectral} spectral water indexes \citep{McFeeters1996, Xu2006, hoberg2015conditional, fisher2016comparing}, where a combination of two or more bands by mathematic ratios has proven to be effective as well as convenient
+	\item \label {enum:yang:im} image processing methods, such as mathematical morphology and object-based analysis \citep{blaschke2010object, lira2006segmentation, yang2015landsat}.
+\end{enumerate*} 
+
+Most of the classical methods of water detection mentioned above and based on the use of spectral water indices \ref{enum:yang:spectral}, and perhaps, a supervised binary classification, where images are classified into water and non-water classes. Even though recently developed methods provide better classification accuracy, they mostly require manual threshold adjustment to provide the best results. So their applicability to global studies, preserving high accuracy, is limited. Also, many of the studies focus on the methods which can be applied to process cloud-free satellite images or images, where the number of noisy pixels is very low.
+
+In this and the next chapter, the main focus will be on a new unsupervised method of water detection. The method was also tested with SAR backscatter imagery and provides good results for water detection. The method is fully automated and accurately predicts visible surface water, even in the case of a significant noise presence. 
+
+According to the classification of \citep{yang2015landsat}, the method fits best the spectral water indexes and object-based analysis categories, \ref{enum:yang:spectral} and \ref{enum:yang:im}. In the next chapter, the method will be also extended with a generative probabilistic framework to reconstruct missing water pixels, for example, due to cloud or snow other noise and. In the above classification, this extension falls under the category Machine Learning (ML) \ref{enum:yang:ml}, even though. More specifically, an unsupervised version of it, even though, not classical ML methods, such as artificial neural networks, are used to implement the algorithms. Methods of ML \ref{enum:yang:ml} can be further separated into several smaller sub-categories, such as supervised ML, unsupervised ML, reinforcement ML. A few more advanced methods were introduced recently, such as deep learning, generative adversarial networks \citep{goodfellow2014generative}. Supervised ML is a classical example of ML and has been evolving for a long time. It solves a problem of classification or regression given a set of training examples. On the other hand, the definition of unsupervised ML is much vaguer. One of the definitions describes it as a task of inferring a function to describe hidden structure from unlabeled data. In general, the unsupervised ML solves tasks similar to those which are solved by supervised ML, but in this case, without any prior manual training required. Unsupervised ML does this by performing one of the following tasks: 
+\begin{enumerate*}[label=(\emph{\arabic*})]
+	\item \label {enum:ml2:clustering} clustering
+	\item \label {enum:ml2:dimentionality-reduction} dimensionality reduction
+	\item \label {enum:ml2:density} density estimation
+\end{enumerate*}.
+The essential part of unsupervised ML is that all steps can be performed in an automated manner. In practice, some tuning of the algorithm parameters is still required from time to time.
+
+Here, use Otsu thresholding and Canny edge filters are used as building blocks for an automated water detection algorithm. The Canny edge filter is applied mainly to perform dimensionality reduction \ref{enum:ml2:dimentionality-reduction}. This step is followed by the use of Otsu thresholding step, resulting in that estimation of local threshold versus global one. This results in a much more accurate water detection, mainly because the focus is shifted only to the most potential waterbody boundaries. In practice, a few additional steps may be required when working with different types of multispectral imagery, for example, removal of spurious edges based on the gradient of spectral index values, lengths of the edges or topological properties. By combining image processing methods with the understanding of multispectral signal available in the satellite images, a fully automated step-wise algorithm for surface water detection is developed.
+
+\subsection{Otsu thresholding}
+In image processing and computer vision, Otsu's method \citep{otsu1975threshold} is used to automatically cluster images using thresholding, or the reduction of a grayscale image into a binary image (in more general form - into several classes). Otsu thresholding makes use of Fisher's linear discriminant analysis \citep{fisher1936use} to compute the optimal threshold which discriminates the image into multiple classes in an optimal way. In a simple form, the method allows finding a threshold to classify the image into two classes, $C_0$ and $C_1$. This is done by analyzing the histogram of all values of the image, assuming that they represent a bivariate distribution. 
+
+In a simple binary form, the idea is to select a threshold that minimizes the intra-class (or within class) variance - the combined spread:
+
+\begin{equation}
+t = \underset{t}{\mathrm{argmin}}\left(\sigma_w^2(t)\right)
+\label{eq:otsu-withinclass}
+\end{equation}
+
+where $\sigma_w^2(t)$ is the within-class variance, defined as:
+
+\begin{equation}
+\sigma_w^2(t) = w_0^2(t) \sigma_0^2(t) + w_1^2(t) \sigma_1^2(t)
+\end{equation}
+
+and $w_{0,1}$ and $\sigma_{0,1}^2$ are the probabilities and variances of two classes, separated by the threshold value at index $t$, where $t$ is on the indices of the histogram, defined by L levels $i \in \mathbb{Z}_L$. 
+
+In the case of a histogram with $L$ levels, the probabilities $w_{0,1}$ are defined as:
+
+\begin{equation}
+w_0(t) = \sum_{i=0}^{t}{p(i)}
+\end{equation}
+
+\begin{equation}
+w_1(t) = \sum_{i=t+1}^{L-1}{p(i)}
+\end{equation}
+
+And the means:
+
+\begin{equation}
+\mu_0(t) = \sum_{i=0}^{t}{\frac{i p(i)}{w_0(t)}}
+\end{equation}
+
+\begin{equation}
+\mu_1(t) = \sum_{i=t+1}^{L-1}{\frac{i p(i)}{w_1(t)}}
+\end{equation}
+
+\begin{equation}
+\mu = \sum_{i=0}^{L-1}{i p(i)}
+\end{equation}
+
+where $\mu$ is the total mean. 
+
+Minimizing the above sum \ref{eq:otsu-withinclass} for each possible threshold is expensive. Otsu shows that the same can be achieved by minimizing the intra-class (or within class) variance is the same as maximizing the inter-class (or between class) variance $\sigma_b^2$:
+
+\begin{equation}
+\sigma_b^2(t) = \sigma^2 - \sigma_w^2(t) = w_0 \left(\mu_0(t) - \mu \right)^2 + w_1 \left(\mu_1(t) - \mu \right)^2 
+\end{equation}
+
+\begin{equation}
+\sigma_b^2(t) = w_0(t) w_1(t) \left( \mu_0(t) - \mu_1(t) \right)
+\label{eq:otsu_between_variance}
+\end{equation}
+
+The optimal threshold is then obtained by maximizing the:
+
+\begin{equation}
+t = \underset{t}{\mathrm{argmax}}\left(\sigma_b^2(t)\right)
+\end{equation}
+
+The resulting formula \ref{eq:otsu_between_variance} is much easier to apply and can be computed by a single-pass algorithm applied to the image histogram (spectral index in our case). In this study, the algorithm is implemented using Google Earth Engine and JavaScript API so that it can be applied to a large number of images. Moreover, the method is usually implemented as one of the classical image processing libraries, when images are processed locally.
+
+In our case, the red vertical line in the figures \ref{fig:water_detection_method_local_water_hist_Dubai} and \ref{fig:water_detection_method_local_water_hist_PC} indicates the optimal threshold found using this method.
+
+\subsection{Canny edge detector}
+
+While global Otsu thresholding has been used successfully for many applications, starting from image processing, but later, applied to remote sensing, its value can be significantly improved to achieve even more accuracy. One of the limitations of the threshold being computed from all image pixels is that it includes all of the values present in the image, while we may be interested only to the pixels representing boundaries between water and land. To prevent this, the image is first reduced to include only pixels potentially representing water and a land boundary before applying the Otsu thresholding. Another popular algorithm used in image processing is Canny edge filter, which allows detection of a wide range of edges in images. The algorithm was developed in 1986 by \citep{canny1986computational}. The algorithm allows detection of edges with the low error rate, assuming that most of the edges are detected and that the image noise is not marked as the edge. To satisfy these requirements, the algorithm is constructed from a number of steps: 1) images is smoothed using Gaussian kernel to remove the high-frequency noise 2) intensity gradients are computed 3) non-maximum suppression step is applied to remove spurious edges 4) double thresholding is applied to determine potential edges 5) edges are tracked by hysteresis - edges that are weak and not connected to strong edges are suppressed.
+
+During the first step, the image is smoothed, usually by convolving with the Gaussian kernel of some fixed size. After that, the gradient and aspect are computed as:
+
+\begin{gather}
+G = \sqrt{G_x^2 + G_y^2} \\
+\theta = atan2\left(G_y, G_x\right)
+\end{gather}
+
+The aspect $\theta$ is then rounded to one of the discrete angles representing vertical, horizontal and diagonal lines ($0^{\degree}$, $45^{\degree}$, $90^{\degree}$, $135^{\degree}$).
+
+During non-maximum suppression step, the edges get thinned followed by thresholding and edge tracking, ensuring that only the strongest edges remain.
+
+In our study, the implementation of Canny edge filter available within Google Earth Engine is extended with the Ostu thresholding algorithm, coded using its JavaScript API. Some of the figures were generated using using Python and the implementation of algorithms from scikit-image library \citep{webScikitImage}. The main parameters used to tune the algorithm were $\sigma$ and size of the Gaussian kernel and the threshold used to remove edges. Both parameters were found empirically to ensure detection of most of the water features present in the satellite images.
+
+\section{Dynamic local thresholding of spectral water indices}
+
+%http://hipersayanx.blogspot.nl/2016/08/otsu-threshold.html
+%http://hipersayanx.blogspot.nl/2015/08/canny-edge-detector.html
+%http://scikit-learn.org/stable/modules/lda_qda.html#dimensionality-reduction-using-linear-discriminant-analysis - LDA/QDA
+
+Varying thresholds of spectral water indices may result in significant errors in resulting surface water masks \citep{Yang2014}. Manual adjustment of the threshold is usually required to overcome these errors, which become even more evident for multispectral images where significant atmospheric noise is present. However, also, because spectral properties of open water, as well as the land type next to water, may vary significantly across the globe. 
+
+In many cases, surface water constitutes only a small fraction of the overall land cover, making it harder to detect with threshold based methods. Large local errors may be introduced when a constant threshold of 0.0 is used to distinguish between water and land. The challenge is to establish a varying threshold, that can be derived automatically. 
+
+The fact that water is almost never clear in the real world may result in significant distortions in the observed spectral properties, limiting the applicability of spectral indices, especially when a single fixed threshold is used to separate water pixels from non-water pixels. Typical variations of threshold values for different spectral water indices can be found in \citep{Ji2009}. One of the approaches to overcome this problem is to use methods that allow detecting threshold values based on a histogram of all NDWI values in a given area. One such method is Otsu thresholding \citep{Li2013}, \citep{Yang2014}. In fact, the Otsu method is very similar to the k-means method applied to the histogram of spectral index values \citep{Liu2009}.
+
+The use of dynamic threshold detection methods, such as histogram-based Otsu thresholding, helps to overcome some of the problems. However, this approach does not work when the fraction of water pixels is small. The main reason is that number of land-use types can be significant, resulting in that water pixels become practically invisible, making it impossible to detect. A more detailed example can be found in Chapter \ref{ch7}, where surface water of Murray-Darling River Basin, Australia is estimated from multitemporal Landsat 8 dataset.
+
+To handle this problem, two method are applied sequentially (Canny edge filter and Otsu thresholding) to spectral water index images. This allows detection of local threshold versus the global one. The application of the Canny edge filter with a very high threshold applied to the spectral index image reveals only edges located near sharp value changes. In the case of water spectral indices, this usually takes place when the near- infrared band abruptly changes.
+
+Potential water and land pixels located near water are then computed using morphological dilation applied to the detected edges. It is important to note, that this approach can result in a skewed distribution in the case of thin, single pixel wide water bodies (canals). To overcome this problem a buffer with the size (dilation) equal to half of the pixel is used in step 3. In an ideal situation, the resulting distribution should look bimodal \ref{fig:water_detection_method} so that a clear distinction between land and water can be made from this distribution.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1\textwidth]{01.2-water-detection/figures/water_detection_method_Dubai}
+	\includegraphics[width=1\textwidth]{01.2-water-detection/figures/water_detection_method_zoom_Dubai}
+	\caption{The method of dynamic local thresholding for water detection, Palm Jebel Ali, Dubai, UAE. }
+	\label{fig:water_detection_method}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1\textwidth]{01.2-water-detection/figures/NDWI_hist_local_global_Dubai}
+	\caption{Frequency histogram of NDWI values without (left) and with (right) the use of Canny edge detection filter, $\sigma=1, th=0.5$. The red line shows the threshold estimate using Otsu method.}
+	\label{fig:water_detection_method_local_water_hist_Dubai}
+\end{figure}
+
+The proposed method consists of the following steps: 1) compute spectral water index, 2) compute edges using Canny edge detector 3) dilate edges to capture most probable water and land pixels located around waterbody edges 4) compute threshold value using Otsu method, using only the pixels in the buffer 5) compute water mask by applying the threshold.
+
+As can be seen in Figure \ref{fig:water_detection_method_local_water_hist_Dubai}, the proposed method can capture smaller local features better when compared to the use of the default thresholds.
+
+
+\begin{gather}
+I=\frac{\rho_{green}-\rho_{swir1}}{\rho_{green}+\rho_{swir1}} \\
+C=Canny(I,\sigma,th) \\
+I_c=\left\{ I | I \in C \oplus S \right\} \\
+T=Otsu(I_c) \\
+Water = \left\{ I | I < T \right\}
+\end{gather}
+
+\setstretch{1.0}
+
+where $Canny$ - is a canny edge detection filter, applied to the spectral water index $I$ and resulting in a masked image of edges $C$ (\ref{fig:water_detection_method} red edges), in our this example - $MNDWI$; $\sigma$ and $th$  $S$ is a kernel (usually, square or circular matrix of 1 values), 
+
+\section{Stepwise method of surface water detection for reservoirs}
+
+To validate the applicability of the above method and to test its performance, the method is applied to reconstruct surface area changes for a relatively small reservoir with maximum surface water area of about 300ha and capacity of about 36 800 000 m3. 
+
+\subsection{Prosser Creek Reservoir}
+
+The Prosser Creek Reservoir is located in Nevada County, California, USA and was constructed between 1959 and 1962 by the Unites States Bureau of Reclamation at the altitude 1750m above the sea level. The dam crest height is 50m, and the reservoir width is about 0.5km. It impounds Prosser Creek and is used for both irrigation and flood control during winter and spring. 
+
+\begin{wrapfigure}{r}{0pt}
+	\raisebox{0pt}[\dimexpr\height-0.5\baselineskip\relax]{\includegraphics[width=0.5\textwidth]{01.2-water-detection/figures/ProsserCreekReservoirDam}}
+	\caption{Prosser Creek Reservoir, Nevada County, California, USA. Image: Bureau of Reclamation.}
+\end{wrapfigure}
+
+The reservoir was selected for validation because of high-frequency surface water level data available from USGS (\url{http://nwis.waterdata.usgs.gov/nwis}). 
+
+The daily water level data is used, measured at the dam during 1996-2016 (Figure \ref{fig:pc-water-levels}). As can be seen, the reservoir water level follows a typical seasonal pattern, with almost constant water levels during the winter season. However, during some years the reservoir was only partially filled in.
+
+To test the applicability of the surface water detection method outlined above, all freely available medium resolution (<60m) satellite images for this area were used, measured by multiple multispectral (Landsat 4-8 and Sentinel-2) and SAR (Sentinel-1) sensors. In total, 1297 images were collected using different sensors.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{01.2-water-detection/figures/water_level_measured}
+	\caption{Measured water levels, source: USGS}
+	\label{fig:pc-water-levels}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/rug}
+	\caption{Number of images acquired by different satellite missions analyzed}
+	\label{fig:pc-n-images}
+\end{figure}
+
+The reservoir surface area is on average 41\% covered by clouds \cite{wilson2016remotely}, freezes during the winter season, and varies significantly throughout the years and seasons, resulting in that multiple images are fully or partially covered by clouds, cloud cover and snow/ice.
+
+The above method is applied to process TOA images, without the use of cloud or snow masking, to see how good or bad different surface water detection methods will perform. Subsequently, other processing steps were added, such as local Otsu thresholded mentioned above and topographic masking using HAND. 
+
+\afterpage{%
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_RGB}
+		\caption{True-color image for Prosser Creek Reservoir, CA, USA. At-sensor reflectance ($\rho_{red}$, $\rho_{green}$, $\rho_{blue}$)}
+		\label{fig:r1_true}
+	\end{figure}
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_swir1_nir_green}
+		\caption{False-color image for Prosser Creek Reservoir, CA, USA. At-sensor reflectance ($\rho_{swir1}$, $\rho_{nir}$, $\rho_{green}$)}
+		\label{fig:r1_false}
+	\end{figure}
+	
+	\clearpage
+}
+
+In the figures \ref{fig:r1_true} and \ref{fig:r1_false} a few typical Landsat images for our study area are presented, showing the variability of reflectance values in visible and infrared parts of the spectrum. A number of randomly selected images is used, which were particularly difficult to process using most of existing methods, as well as a few cloud-free images. The main type of noise present in most of these images is formed by cloud cover. Some of the images show significant snow cover presence, as well as ice. 
+
+As expected, surface water is slightly better visible than false-color composite based on infrared and near-infrared is used. This happens because infrared radiation penetrates thin clouds more than it happens to visible light. 
+
+On several images, the effects of hill shadows, which can cause false-positive surface water detection, are also present. Image acquired on 2015-10-08 also has a slight amount of algae present near dam and image acquired on 2014-02-23 is partially covered by ice. We will see later in this chapter, that these pixels will result in false-negative surface water detection, and in general, can't be corrected use simple discriminative methods discussed in this chapter. More advanced methods to correct these errors will be discussed in the next chapter, where probabilistic methods will be applied in a combination with the local Otsu thresholding to estimate surface water.
+
+
+\subsection{Application of dynamic thresholding method for water detection}
+
+Applying local dynamic thresholding method introduce above to the cloud-free images where little hill-shadow effects were present allowed to remove some falsely detected water and resulted in a bit better water mask locally, Figure \ref{fig:water_detection_method_PC}. In the same way, as in the previous example for Palm Jebel Ali (\ref{fig:water_detection_method}), we can see from the histogram in \ref{fig:water_detection_method_local_water_hist_PC} that the objective selection the threshold using global Otsu would be difficult. The reason is that the bimodal histogram on the left is skewed and a very long flat valley makes it difficult to decide which threshold value would be the most optimal. At the same time, the histogram on the right represents NDWI values around strong edges in the NDWI image; optimal threshold selection becomes easier to compute. However, we can also see, that in this case, a much larger variability of NDWI values is present, due to different land use types. Even though these disturbances are small, in some images they may be significant, for example, when very distinctive land cover types are present around waterbody (sand, vegetation, man-made constructions). 
+
+In some cases, when local NDWI values result in a multi-modal histogram, the use of multi-class Otsu method would be more appropriate. As an alternative, smaller overlapping areas may be used to limit land cover variability and to ensure local thresholds still take place. Later, in Chapter \ref{ch7} this approach will be applied to estimate permanent surface water from Landsat 8 reflectance composite images for Murray-Darling River Basin in Australia. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{01.2-water-detection/figures/water_detection_method_ProsserCreek}
+	\includegraphics[width=1\textwidth]{01.2-water-detection/figures/water_detection_method_zoom_ProsserCreek}
+	\caption{Method of dynamic local thresholding for water detection (Prosser Creek Reservoir)}
+	\label{fig:water_detection_method_PC}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{01.2-water-detection/figures/NDWI_hist_local_global_ProsserCreek}
+	\caption{Frequency histogram of NDWI values without (left) and with (right) the use of local dynamic thresholding.}
+	\label{fig:water_detection_method_local_water_hist_PC}
+\end{figure}
+
+\section{Variability of NDWI and MNDWI for noisy images}
+
+A more detailed analysis of the values of NDWI (Figure \ref{fig:r1_ndwi}) and MNDWI (\ref{fig:r1_mndwi}) spectral indices shows, that while MNDWI may be a preferable index for some of the cloud and snow-free images, providing a more sensitive way to discriminate water and land. The index is, in general, much more sensitive to snow and cold clouds, making water detection very challenging under these conditions. On the other hand, the MNDWI index was reported to perform better in urban areas. In addition to snow, the MNDWI index is also more sensitive to hill and cloud shadows when compared to NDWI. 
+
+\afterpage{%
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_NDWI_gradient}
+	\caption{NDWI values for Prosser Creek Reservoir for selected dates, \citep{McFeeters1996}. Source: \url{https://code.earthengine.google.com/59461a0aae48edf382670062fae1ea3a}}
+	\label{fig:r1_ndwi}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_MNDWI_gradient}
+	\caption{MNDWI values for Prosser Creek Reservoir for selected dates, \citep{Xu2006}}
+	\label{fig:r1_mndwi}
+\end{figure}
+
+\clearpage
+}
+
+As can be seen from the figures, under the cloud free conditions, both indices can be used to discriminate surface water from the land. Also, when working with atmospherically corrected images, a threshold value of zero is frequently a good starting point for water detection. However, when a very accurate surface water mask need to be detected or when a high concentration of cloud (fog, haze) cover is present - the use of dynamic threshold can be the only option.
+
+In the next figures, where detected surface water mask will be shown, the NDWI will be used as the basis for water mask detection, combined with additional steps to detect surface water. 
+
+\section{Reconstruction of surface water area from noisy images}
+
+To test the method, it was sequentially applied it to a set of randomly selected images with different atmospheric and land-use conditions as shown in figures \ref{fig:r1_true} and \ref{fig:r1_false}. For most cloud-free images, as well as for images covered by clouds, the algorithm was able to detect surface water very accurately, without visible errors. However, for most scenes where a mix of snow/ice and cloud cover was present or where waterbody was partially covered by snow (Figure \ref{fig:r1_canny_otsu}), the results were unreliable, mainly due to the presence of snow pixels, which were generating spurious edges. It is important to note, that no snow or cloud masking was applied before water mask detection algorithm was applied. In practical applications, most of these images, where cloud or snow cover is present, would be filtered as unreliable.
+
+The performance of surface water detection for noisy images was improved dramatically after the additional topographic mask was applied to the Canny edges using HAND < 15m, which resulted in the removal of most of the spurious edges. The final water mask can be seen in Figure \ref{fig:r1_canny_otsu_hand}.
+
+Here we can see that the algorithm was able to detect water masks for all of the images, covered by clouds, snow/ice, or a combination of both. However, for practical use in water resource management applications, further additional processing is required to convert these partial water masks to the actual surface water area values.
+
+Another approach to make the algorithm detect surface water reliably for images covered by snow and is would be to include snow and cloud mask in the consideration when filtering out edges during the edge detection step. However, finding a proper criteria that would work for all combinations of land cover types may be very time consuming and not worth the effort.
+
+\begin{comment}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_NDWI_0}
+	\caption{NDWI=0}
+	\label{fig:r1_ndwi0}
+\end{figure}
+\end{comment}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_NDWI_1_Otsu}
+	\caption{Canny/Otsu}
+	\label{fig:r1_canny_otsu}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/PC_NDWI_2_Otsu_HAND}
+	\caption{Canny/Otsu, HAND < 15}
+	\label{fig:r1_canny_otsu_hand}
+\end{figure}
+
+\section{Validation of surface water detection performance}
+
+To validate the surface water detection method outlined here, and also, to develop a simple statistical model to be used for the validation in the next chapter, mostly cloud-free images were selected covering the reservoir area. The resulting surface water area values were compared to the in-situ observed water levels as shown in figures \ref{fig:scatter_fit} and \ref{fig:water_level_and_area_timeseries_cloudfree}. Additionally, the outliers were identified, indicated in red in the figure. It appeared that for some of the values, the water level station values (during 1997-1998) were unreliable, probably because of sensor problems. For two points, our criteria for the maximum allowed snow/ice and cloud mask (<10 pixels) appear to be incorrect, resulting in higher values for surface water.
+
+It can be seen from the second chart, that even when using the cloud-free images, most of the peaks in the reservoir water level changes can be detected. However, some of the extreme values, except for 2012, where fewer images were available due to the end of Landsat 5 mission. For 2011-2013, the only available images were measured by Landsat 7, with the \href{https://landsat.usgs.gov/slc-products-background}{SLC-OFF} ETM+ sensor problems, resulting in gaps in the satellite images.
+
+\subsection{Model construction using cloud-free satellite images}
+
+After outlier filtering, the second-order polynomial model can be derived from linear regression, resulting in correction of $0.994$ and $RMSE = 4.7ha$ or $0.047km^2$.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\textwidth]{01.2-water-detection/figures/water_level_and_area_scatter_cloudfree}
+	\caption{Prosser Creek Reservoir surface area and water levels for cloud-free images using multiple optical sensors (Landsat, ASTER, Sentinel-2)}
+	\label{fig:scatter_fit}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/water_level_and_area_timeseries_cloudfree}
+	\caption{Prosser Creek Reservoir surface area and water levels for cloud-free images using multiple optical sensors (Landsat, ASTER, Sentinel-2)}
+	\label{fig:water_level_and_area_timeseries_cloudfree}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/water_level_and_area_lowess_all}
+	\caption{Measured surface water levels (top) and estimated surface water area form all images acquired during 1984-2016. The line in the lower chart is based on the LOWESS regression.}
+	\label{fig:water_level_and_area_timeseries_lowess_all}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{01.2-water-detection/figures/water_level_and_area_timeseries_lowess_all_zoom}
+	\caption{Measured surface water levels (top) and estimated surface water area form all images acquired during 2009-2016. The line in the lower chart is based on the LOWESS regression.}
+	\label{fig:water_level_and_area_timeseries_lowess_all_zoom}
+\end{figure}
+
+Finally, the method was applied to process the rest of the (noisy) images, where spectral signal is damaged by atmospheric conditions or where the reservoir is (partially) covered by clouds or cloud cover. However, the resulting surface water areas were less reliable. The resulting surface water area values are show in figures \ref{fig:water_level_and_area_timeseries_lowess_all} and \ref{fig:water_level_and_area_timeseries_lowess_all_zoom}, combined with the non-parametric LOWESS regression \citep{cleveland1979robust}. 
+
+Low surface water values after 2014 are actually caused by the estimates from ESA Sentinel-1A images, where only very small portion of the reservoir can be seen in the image.
+
+\section{On the fusion of water masks estimated from multispectral and SAR sensors}
+
+One of the advantages of the use of Otsu-based methods is that it is much less sensitive to radiometric differences between satellite sensors and may be used across images coming from different satellites. As can be seen in \ref{fig:pc-n-images}, the number of overlapping satellite missions has been increasing during recent years, resulting in a daily or more image availability over our study area. The main challenge of fully automating water detection, in this case, remains to correct evaluation of the confidence of the image pixels, to exclude, or to detect, the presence of clouds, cloud shadows, and snow. Developing a fully automated software which may work across different sensors and also, applied to millions of locations becomes feasible. The Figure \ref{fig:multiple-sensors} demonstrates results of water detection applied across all of the medium resolution sensors (10m-30m) acquired in 2016 during high water level.
+
+\begin{figure}[H]
+	\includegraphics[width=1.0\textwidth,left]{01.2-water-detection/figures/data-fusion-logo}
+	\caption{Surface water mask reconstructed from multiple medium-resolution sensors (Sentinel-1, ASTER, Sentinel-2, Landsat)}
+	\label{fig:multiple-sensors}
+\end{figure}
+
+In fact, for ASTER sensor, it was possible to successfully detect surface water even using raw uncalibrated, but normalized radiance values, represented as DN numbers, without converting them to radiance or reflectance values. However, reliable detection of clouds and snow was harder to perform due to the variability of sun parameters. Therefore, for the final version of the algorithm, the full version of the DN > radiance > reflectance algorithm was implemented within Google Earth Engine using equations \ref{eq:radiance} and \ref{eq:reflectance}.
+
+\subsection{Surface water detection SAR and speckle noise removal}
+
+Not surprisingly, the algorithm has also shown good results when applying to backscatter amplitude SAR images acquired by Sentinel-1 ESA satellite (\ref{fig:multiple-sensors}, left). However, in some images, it was very difficult to distinguish between spurious edges caused by atmospheric effects (Bragg scattering). Surface water masks estimated from these images were excluded when constructing regression model shown in \ref{fig:water_level_and_area_timeseries_cloudfree}.
+
+The best results when using SAR backscatter amplitude images could be achieved after removal of speckle noise. Many methods exist to remove speckle noise in SAR images, some of the most popular include Gamma Maximum a Posteriori (MAP) \citep{lopes1990maximum} or refined Lee filter \citep{lee1981speckle}. At the time when this study was performed, no implementation of speckle filter existed within Google Earth Engine. 
+
+To address this, a new implementation was developed based on the method introduced by Perona and Malik \citep{perona1990scale}. The filter is in fact based on a simple anisotropic diffusion equation, where diffusion coefficient is parametrized using values from the neighboring pixels. 
+
+\begin{equation}
+\pdv{I}{t} = \pdv[2]{ \left(c \cdot I\right)}{x}{y}
+\end{equation}
+
+where $I=I(x,y,t)$ denotes in this case intensity values of the backscatter signal, and $c=c(x,y,t)$ is an anisotropic diffusion coefficient, parametrized using nearest pixel values as:
+
+\begin{equation}
+c = \frac{1}{1 + \left(G/K\right)^2}
+\end{equation}
+
+where $G = \| \nabla I\|$ is the absolute value of the gradient computed for the current image pixel, and K is the user-defined coefficient.
+
+In fact, the original paper defines two alternative version of the parametrization for $c$, resulting in a similar results.
+
+
+The implementation (see Listing \ref{listing:perona-malik}) is based on simple explicit central-differences numerical scheme, implemented using the convolution operator based on a set of 3x3 kernels. 
+
+\begin{figure}[H]
+	\includegraphics[width=1.0\textwidth,left]{01.2-water-detection/figures/perona-malik}
+	\caption{An example of results of Perona-Malik implementation within Google Earth Engine, comparing it to original and Gaussian-smoothed images. Source: \url{https://code.earthengine.google.com/008a8e627389123fd61550929973463a}}
+	\label{fig:perona-malik}
+\end{figure}
+
+As can be seen in Figure \ref{fig:perona-malik}, the image high-frequency noise is significantly decreased after applying the filter, while strong edges still remain. On the contrary, applying simple Gaussian smoothing results in the removal of strong edges, reducing the accuracy of surface water detection.
+
+\section{Conclusions and Discussion}
+
+% PF >>
+A new method dynamic local thresholding is introduced for surface water detection from multispectral optical and SAR satellite imagery. The method is easy to implement and is based on two very popular image processing techniques: Canny edge filter and Otsu thresholding.
+
+The target of this new algorithm is to have one method that can be applied to any multispectral satellite mission, regardless of its spatial and spectral resolution, so that it can be applied globally and on as many multispectral images as possible.
+
+The method was applied to reconstruct surface area changes for Prosser Creek Reservoir in California, USA. A very good agreement with local measurement data was found for cloud-free images.
+
+All satellite free medium resolution images measured by NASA and ESA in 30 years were analyzed, and the resulting surface water masks were compared to daily water level measurements for the period 1996-2017.
+
+While for cloud-free images it was possible to achieve a very good fit, a much more variability was observed when using images with a significant amount of aerosols or snow cover present.
+
+Additionally to optical satellite imagery, the method was also used to process Sentinel-1 SAR imagery. In a contrast to multispectral imagery, where NDWI was used to detect surface water, the backscatter amplitude was used to detect surface water in SAR imagery. Additionally, a speckle noise filter was implemented based on Perona-Malik to improve the quality of images and to decrease the number of spurious sharp edges which do not belong to surface water.
+
+While dynamic local thresholding method presented in this chapter provides a way to very accurately estimate surface water masks, it is still insufficient to reliably estimate surface water mask when a significant amount of noise is present in the images. In fact, the accuracy of the resulting water masks varies a lot depending on the type of noise present in the image. The method shows very good performance in the case of homogeneously distributed noise, such as fog or haze. However, when a water body is partially covered by thick clouds or when it is partially covered by snow/ice - the results are less accurate, resulting in large variability of surface water estimates.
+% PF <<
+
+In the next chapter, we will see how the resulting water mask can be further improved using Bayesian methods, where a combination of cloud-free historical images and the expected water mask, as shown in the figures \ref{fig:r1_canny_otsu} and \ref{fig:r1_canny_otsu_hand}, can be used to reliably estimate the surface area of the reservoir.
+
+Even though, the method introduced in this chapter and further extended in the next chapter has been validated for a single reservoir only (for demonstration purposes), it was successfully tested to reconstruct permanent surface water area for Murray-Darling River Basin in Australia, where the resulting water mask was compared to other water datasets for a very large area. Also early results show, that the method can be easily transfered globally, given that the cloud and snow mask is estimated correctly (low commission error). The next chapter discusses how these masks can be detected automatically using current methods and datasets.
+
+% ... show examples for urban (Paris), mountains, clouds, and snow. \url{https://code.earthengine.google.com/8d06ec032366e949f1581dbb166f7871}. What are the best approaches to handle these situations?
+

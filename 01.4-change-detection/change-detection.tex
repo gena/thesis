@@ -1,0 +1,187 @@
+\chapter{Long-term surface water change detection}
+\label{ch4}
+
+\begin{abstract}
+	Methods to detect long-term surface water changes are discussed. A simple method based on reflectance percentile composites and linear regression is presented. As and example, Siling Lake from Tibetan Plateau is used as a study area. The advantages and drawbacks of the method are discussed.
+	
+	\begin{center}
+		\begin{tikzpicture}[every node/.style={inner sep=0,outer sep=0}]
+		\node[draw=none,shade,blur shadow={shadow blur steps=5}] {
+			\includegraphics[width=3in]{01.4-change-detection/figures/change-detection-dubai}
+		};    
+		\end{tikzpicture}
+	\end{center}
+	
+	\textbf{Keywords:} reflectance percentiles, NDWI, linear regression, long-term surface water changes.
+	
+\end{abstract}
+
+
+%% Start the actual chapter on a new page.
+\newpage
+
+\section{Introduction}
+\dropcap{A}{s} we have seen in the previous three chapters, accurate surface water detection is a complex task and may require many steps. However, different land use changes may occur at different temporal scales. If we are interested only in long-term (inter-annual) land use changes - a more general, statistical methods can be applied to detect these changes. With sufficient observations available and under the assumption that statistics of reflectance values for different years remain the same, we can use relatively simple methods, when compared to those discussed for example in Chapter \ref{ch3}. 
+
+The first step that should be done when analyzing optical passive sensor satellite imagery is the elimination of clouds and cloud shadow effects. Cleaning images from cloud, cloud shadows, snow can be a challenging and time-consuming process, especially when images partially covered by clouds need to be considered. Many methods were developed to do this properly, as has been discussed in chapters \ref{ch1}, \ref{ch2}, and \ref{ch3}. These methods can be used to construct completely cloud-free images (as we can see for example in Google Maps), or to extract information required to analyze temporal changes in different land cover classes. 
+
+As an alternative to this, we can generate inter-annual composites directly from the top-of-atmosphere or surface reflectance values. In the recent years, this approach was used in Science paper \citep{Hansen2013} to study forest cover changes by employing a combination of metrics, such as: 
+\begin{enumerate*}[label=(\emph{\alph*})]
+	\item selected percentile values
+	\item mean reflectance values for selected percentile ranges
+	\item slope of linear regression of band reflectance values versus image date
+\end{enumerate*}. Furthermore, the paper makes use of supervised classification methods based on decision trees to relate these metrics to homogeneously varying subsets of data.
+
+Here, a similar approach to estimate long-term surface water changes is introduced. However, instead of developing multiple metrics like in \citep{Hansen2013}, a single combined metric employing percentiles is used to estimated average cloud-free reflectance values and slope of linear regression to identify pixels where long-term changes have been occurring. 
+
+The resulting method is also more resource efficient because applying linear regression after averaging is cheaper to compute. The cost of applying linear regression directly to reflectance values is $O(n^3)$, and the cost to calculate the average value for every pixel is $O(n)$, where n is the number of analyzed images. The $O$ notation is frequently used in computer science to indicate scalability of the algorithm with the growth of the dataset. By employing a two-step approach, surface water changes can be estimated in almost $O(n)$ time, making it attractive to be applied across multiple sensors, assuming similarity in reflectance values among different satellite sensors for some spectral bands. For surface water change studies, the most used spectral index is NDWI. The index uses near-infrared and green bands. These bands have similar spatial and spectral resolution across multiple Landsat missions and seem to be in agreement with regards to spectral response and spectral resolution, except for Landsat 8. For Landsat 8, the OLI sensor covers the thinner spectral range for the near-infrared band when compared to TM and ETM+ sensors used by Landsat 4, 5, and 7 \citep{roy2016characterization, angal2014cross}. A detailed comparison of spectral responses between Landsat 5 and 7 can be found in \citep{teillet2001radiometric} and between Landsat 7 and 8 in \citep{flood2014continuity}. Additionally, the literature says that data produces from Landsat were cross-calibrated to ensure consistency and continuity of values between different missions \citep{mishra2014radiometric}. This makes combining images across different Landsat sensors, and the use of statistical methods to process their values very promising.
+
+\begin{figure}[H]
+	\includegraphics[width=1.0\textwidth,left]{01.4-change-detection/figures/aral}
+	\caption{Aral Sea, Uzbekistan. False-color reflectance percentile composite (swir1, nir, green, 20\%). The red circle indicates the location where reflectance and NDWI values shown on charts were plotted. The composite images and the time series was computed from 4325 Landsat scenes between 1984 and 2017. Source: \url{https://code.earthengine.google.com/c1ccc09c6b5e7d73bd3a3601f8edfaf3}}
+	\label{fig:ch4-aral-sea}
+\end{figure}
+
+Surface water is very dynamic and may change on daily, monthly and annual basis. To estimate long-term, inter-annual surface water changes from raw satellite images, we have to exclude effects caused by both clouds and by intra-annual or seasonal variations, assuming these changes remain the same across years. Examples of intra-annual changes can be: seasonal changes in surface water due to natural processes - a usual water cycle; changes of surface water levels caused by tidal effects in coastal areas; variability in surface water levels due to man-made activities, such as operation of reservoirs, which may also cause surface water changes in the downstream rivers. On the contrary, long-term surface water changes may be due to natural changes of water boundary, such as erosion or accretion; natural changes caused by climate changes; man-made changes in rivers or coastal zones (embankments, land reclamation, construction of reservoirs). 
+
+In reality, a combination of these surface water changes may occur and interfere with each other, making the task of surface water change detection extremely difficult.
+
+To demonstrate the variability of reflectance values in different bands for the area where both long and short-term change took place, a long-term time series in the middle of the Aral Sea is obtained for the pixels which have been dried up during the last decades, as shown in Figure \ref{fig:ch4-aral-sea}. This area has faced dramatic changes regarding surface water and as can be seen from the reflectance values - this has influenced both reflectance and corresponding NDWI value changes. While it would be possible to detect the trend of NDWI values from the raw reflectance value time series, doing this may be less efficient, mainly because NDWI values for many pixels corresponding to clouds may look very similar to the values corresponding to water. Additionally, it would require much more computing resources.
+
+\section{Long-term surface water change detection}
+
+To address long-term surface water changes, we can first try to exclude short-term variability of reflectance values by computing average images for a long time intervals, excluding effects of clouds and cloud shadows in this way. By estimating this type of composite images for multiple time intervals, followed by the application of spectral water indices, such as NDWI, we should be able to reconstruct a long-term variability of the surface water changes, which will be reflected in the variability of the NDWI values. One of the important questions arising then using this method is how to select the best percentile, allowing to minimize the effect of clouds and cloud shadows, and at the same time, avoiding the appearance of the cloud of shadows in the images. 
+
+The method will work only if a sufficient number of observations is available. A large number of images is required to ensure that the distribution of values, used to compute reflectance percentile composites, converges to the actual distribution representing different land or atmosphere values for a given location.,  is based on similar distributions. Ideally, the resulting percentile should look the same for two areas when no long-term surface water changes take place. 
+
+Because surface water has a very distinctive spectral signature, with a very low reflectance values in almost all bands, the presence of absence of water in a given pixel will be reflected in the final distribution represented as a probability distribution function (PDF) or a cumulative distribution function (CDF) for a given location.
+
+\afterpage{%
+	
+	\begin{figure}
+		\includegraphics[width=1.0\textwidth,left]{01.4-change-detection/figures/Tibet-lake-changes}
+		\caption{Siling Lake, Tibetan Plateau, China. Two reflectance composite images at the top-left show how the lake looked like in 80's (left) and how it looks like today (right). The blue color indicates submerged land due to climate changes. Source: \url{https://code.earthengine.google.com/87d0057d8b3d28817b1da7cfc1bd6b6e}}
+		\label{fig:ch4-tibet-lake}
+	\end{figure}
+	
+	\begin{figure}
+		\includegraphics[width=1.0\textwidth,left]{01.4-change-detection/figures/Tibet-time-series}
+		\caption{Estimating surface Siling Lake, Tibetan Plateau, China. The actual TOA reflectance values (left-top), annually-averaged (20\%) reflectance values (left-middle) and NDWI values, estimated from annually-averaged reflectance values (left-bottom). The three charts on the left indicate values and distributions of the sun parameters for the images used to compute these values.}
+		\label{fig:ch4-tibet-lake-time-series}
+	\end{figure}
+	
+	\clearpage
+}
+
+To demonstrate main steps used in the methods, surface water changes which have occurred around the Siling Lake are analyzed - one of the lakes of Tibetan Plateau, China. In the last few decades, an enormous area of new surface water has been created due to climate changes (more on this will be discussed in the next chapter). The Figure \ref{fig:ch4-tibet-lake} shows the final estimate for the submerged land, equal to $22.5 km^2$. 
+
+A straightforward and efficient way to estimate long-term surface water changes may be to use a two-step approach. First, the intensity percentile composites are computed for all temporal intervals $T$ used for the change detection analysis:
+
+\begin{equation}
+F(\rho) = \int_{-\infty}^{\rho^i} P(\rho)d\rho
+\end{equation}
+
+where $F$ - cumulative distribution function, superscript index $i$ denotes the $i^{th}$ percentile, $\rho$ - reflectance values for a given band.
+
+Then, for every percentile reflectance value $\rho^i$, the spectral index is computed as an image:
+
+\begin{equation}
+I = \frac{\rho_{green}^i-\rho_{nir}^i}{\rho_{green}^i+\rho_{nir}^i} \\
+\end{equation}
+
+Then, the linear regression is performed on a set of all index values for all intervals $T$:
+
+\begin{equation}
+I = \beta_0 + \beta_1 T + \epsilon
+\end{equation}
+
+The resulting slope of the linear regression $\beta_1$ is then analyzed to identify pixels, where significant surface water changes took place. 
+
+Usually, the percentile is determined empirically and corresponds to low reflectance values, but not too low, to avoid confusing water with cloud shadows, which can also be very dark for green and nir (or swir) bands used to estimate spectral indices. For those pixels, where the slope $\beta_1$ of the linear regression is significant. The spectral index values $I$ are also tested to exclude false positive changes, detected for images where most images correspond to water or land:
+
+\begin{equation}
+\begin{split}
+\begin{aligned}
+I &= min\left(I, I_{min}^{water}\right) \\
+I &= max\left(I, I_{max}^{land}\right) 
+\end{aligned}
+\end{split}
+\label{eq:water-land-suppression}
+\end{equation}
+
+where $I_{min}^{water}$ and $I_{max}^{land}$ indicate minimum and maximum values of the spectral index to be considered as water and land correspondingly. The equation \ref{eq:water-land-suppression} is applied for every interval used during temporal averaging.
+
+The first part of the equation \ref{eq:water-land-suppression} allows to filter pixels, where the slope of the regression is significant, but all of the values still belong to water. Another equation does the same to eliminate locations where all of the temporal intensity values belong to the land.
+
+Additionally, NDVI vegetation index is used similarly to remove locations where for example deforestation took place. In this case, NDWI values may also change significantly in time, but the actual changes do not correspond to surface water changes.
+
+\afterpage{%
+	
+	\begin{figure}
+		\includegraphics[width=1.0\textwidth,left]{01.4-change-detection/figures/images_real}
+		\caption{Examples of false-color (swir1, nir, green) images from 1998 acquired by Landsat TM sensor for Siling Lake, Tibetan Plateau, China. Source: \url{https://code.earthengine.google.com/882ab2929f536676d56bc79cbc895ded}
+		}
+		\label{fig:ch4-tibet-lake-false}
+	\end{figure}
+	
+	\begin{figure}
+		\includegraphics[width=1.0\textwidth,left]{01.4-change-detection/figures/images_percentiles}
+		\caption{False-color (swir1, nir, green) reflectance percentile images estimated from 751 images acquired by multiple NASA Landsat missions during 1984-2017, Siling Lake, Tibetan Plateau, China}
+		\label{fig:ch4-tibet-lake-percentiles}
+	\end{figure}
+	\clearpage
+}
+
+The actual number of images available need to be also adjusted base on the cloud frequency present for a given area. For the area around this lake, the average cloud frequency is 13\%, with relatively low intra-annual variation, as estimated by \citep{wilson2016remotely} from MODIS images. However, for some areas on Earth, mainly near the equator, 95\% of the images may be covered by clouds. This means, that to apply this method, many more images need to be analyzed. In this case, only long-term surface water changes may be estimated using passive optical sensors. The use of SAR imagery would be very attractive in this case.
+
+% t-test using regression \url{https://en.wikipedia.org/wiki/Student%27s_t-test#Slope_of_a_regression_line}
+% non-parametric tests \url{ftp://cran.r-project.org/pub/R/web/packages/trend/vignettes/trend.pdf}
+
+% CDF sun parameters mismatch, topographic errors \url{https://code.earthengine.google.com/c9ed4d65ee90db7d4944e4c257969e1b}
+% \url{https://code.earthengine.google.com/5ddaeea0946642afe23d7557c3c0c657}
+
+\section{Topographic noise for inconsistent image collections}
+Even though the method described in Chapter \ref{ch4} allows detection of surface water changes at high accuracy, a substantial commission errors may occur in the mountain regions. These errors are caused mainly by a mismatch between of sun parameter values (elevation and azimuth) causing differences in hill shadows in composite images, used to detect surface water changes. For the global analysis, most of these errors were eliminated by masking-out the final surface water changes images with the topographic index derived from HAND. The topographic mask was constructed by  HAND < 40m was used to filter out these errors. The HAND dataset used for the processing was generated from 30m SRTM and some auxiliary 90m datasets to cover areas where it was not acquired (>60 degree north latitude) \citep{donchyts2016hand}. However, for a very accurate surface water change estimates this may also result in omission errors in the areas when DEM values are incorrect. For the time being, no free high-resolution DEM exists to be used as a topographic index (via HAND). Therefore, the Aqua Monitor website does not perform this correction during on-the-fly estimation of surface water changes. This may change in the future versions, when a more appropriate method is introduced.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1\textwidth]{01.8-aqua-monitor/figures/problem1}
+	\caption{False-positive composites (swir1, nir, green) and surface water changes commission errors due to inconsistent sun parameters in the samples used to compute changes in the hilly areas (2000-2015). Top: upstream of the Lake Mead (\href{http://aqua-monitor.appspot.com/?from=2000&to=2013&view=36.103119715292486,-113.93795967102045,13z&max_doy=365}{36.10, -113.90}); bottom: river near Yogongxiang, China (\href{http://aqua-monitor.appspot.com/?mode=dynamic&from=2000&to=2013&view=30.269128374988604,94.89677429199217,12z&max_doy=365&averaging_months1=36&averaging_months2=36}{30.27, 94.90}).}
+	\label{fig:am-topographic-errors}
+\end{figure}
+
+Examples of these errors are demonstrated in Figure \ref{fig:am-topographic-errors}. 
+
+Some of the most evident errors, especially in the areas with the highest cloud frequency values and a small number of satellite images available.
+
+The same errors can be reported in the \citep{Hansen2013} dataset, which uses similar methods to estimate surface water changes (interval mean percentile composites versus percentile composites in Aqua Monitor).
+
+A time consuming approach to eliminate these errors could be to perform topographic correction on every image before passing them to the change detection algorithm. However this may significantly increase amount of resources making this type of analysis hardly achievable as for today.
+
+
+\section{Conclusions and Discussion}
+
+The method presented in this chapter showed surprisingly good performance for most of the places on Earth and was used to analyze surface water changes during the last 30 years globally. Despite its simplicity, the method can very accurately detect long-term surface changes and is easy to implement using Google Earth Engine parallel processing platform.
+
+Another advantage of the method is that it is less resource intensive when compared to more stream-line approach to detect surface water changes, and hence it can be made used for large planetary-scale studies and for a wide range of users, which is demonstrated in the Chapter \ref{ch6}. For example, when all images are first classified e.g. using supervised machine learning methods, and then the changes are computed from the resulting thematic maps.
+
+However, it may be difficult to reliably detect surface water changes when the following criteria are not satisfied:
+
+\begin{enumerate}[label=(\alph*)]
+	\item \label{enum:changes-low-count} the number of images used to compute percentiles is low
+	\item \label{enum:changes-complex-trend} surface water changes follow more complex pattern than a one direction trend
+	\item \label{enum:changes-multple-classes} multiple land-use changes are present, represented by low reflectance values but irrelevant to surface water changes
+	\item \label{enum:changes-topo} complex topographic conditions combined with non-equally distributed sun parameters in different time intervals
+\end{enumerate}
+
+Some of these issues can be easy to address, for example, by changing empirically chosen percentile to make sure we capture pixels free from cloud and snow effects. This can be easily done.
+
+Additionally, image samples used to compute percentiles can also be selected only to represent only some seasons, where some of the effects are less present, filtering image collections by day-of-year or by sun parameters, to avoid the most evident topographic effects. 
+
+The method presented here works best when reflectance values, representing complex land-use and atmospheric changes, are similarly distributed. While for surface water this is frequently true, it may be less trivial under very complex land-use change combined \ref{enum:changes-multple-classes}. To detect this kind of changes automatically, additional inference steps may be required, for example, where different patterns can be recognized in the distributions such as those presented in Chapter \ref{ch3}, Figure \ref{fig:prob-sampled-water-cloud-snow}.
+
+While linear regression may be a good choice to detect monotonic long-term changes, surface water may follow much more complex trends, requiring the use of more complex methods to capture them. For example, the logistic regression can be used instead of the linear regression to detect abrupt changes such as construction or decommissioning of reservoirs or analyze autocorrelation to detect recurring surface water changes.
+
+With the increasing amount of satellite images available, the use of statistical methods may be a powerful instrument, providing an easy way for change or anomaly detection before the use of more complex methods.
+
+
