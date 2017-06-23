@@ -4,7 +4,7 @@
 \begin{abstract}
 
 % PF >>
-The chapter discussed an automated surface water detection method which can be applied globally and without the need for manual adjustments. A new method, based on dynamic local thresholding of spectral water indices, is presented. The method allows accurate detection of surface water from multispectral imagery even in the case of noisy data. The simplicity of the method makes it attractive for large scale applications and therefore can be used to address our research questions focusing on the accurate and high spatiotemporal resolution surface water detection. Applicability of the method for images with significant cloud and snow cover is tested. The method was applied for both TOA and reflectance percentile composite images. Numerous examples demonstrate the applicability of the method as well as its drawbacks.
+The chapter discussed automated surface water detection method which can be applied globally and without the need for manual adjustments. A new method, based on dynamic local thresholding of spectral water indices, is presented. The method allows accurate detection of surface water from multispectral imagery even in the case of noisy data. The simplicity of the method makes it attractive for large scale applications and therefore can be used to address our research questions focusing on the accurate and high spatiotemporal resolution surface water detection. Applicability of the method for images with significant cloud and snow cover is tested. The method was applied to process both top of atmosphere (TOA) and reflectance percentile composite images. Numerous examples demonstrate the applicability of the method as well as its drawbacks.
 % PF <<
 
 \begin{center}
@@ -424,19 +424,19 @@ As can be seen in Figure \ref{fig:perona-malik}, the image high-frequency noise 
 \section{Conclusions and Discussion}
 
 % PF >>
-A new method dynamic local thresholding is introduced for surface water detection from multispectral optical and SAR satellite imagery. The method is easy to implement and is based on two very popular image processing techniques: Canny edge filter and Otsu thresholding.
+A new method of dynamic local thresholding was introduced for surface water detection from multispectral optical and SAR satellite imagery. The method is easy to implement and is based on two popular image processing techniques: Canny edge filter and Otsu thresholding.
 
-The target of this new algorithm is to have one method that can be applied to any multispectral satellite mission, regardless of its spatial and spectral resolution, so that it can be applied globally and on as many multispectral images as possible.
+One of the advantages of the algorithm is that it can be easily applied to process any multispectral satellite imagery measured by any satellite mission, regardless of its spatial and spectral resolution. This fact makes it attractive for global applications, where a large number of satellite data needs to be processed without user supervision.
 
-The method was applied to reconstruct surface area changes for Prosser Creek Reservoir in California, USA. A very good agreement with local measurement data was found for cloud-free images.
+The method was applied to reconstruct surface area changes for Prosser Creek Reservoir in California, USA. An excellent agreement with local measurement data was found for cloud-free images.
 
-All satellite free medium resolution images measured by NASA and ESA in 30 years were analyzed, and the resulting surface water masks were compared to daily water level measurements for the period 1996-2017.
+All satellite freely available medium resolution images measured by NASA and ESA in 30 years were analyzed and the resulting surface water masks were compared to daily water level measurements for the period 1996-2017.
 
-While for cloud-free images it was possible to achieve a very good fit, a much more variability was observed when using images with a significant amount of aerosols or snow cover present.
+While for cloud-free images it was possible to achieve a perfect fit with the in-situ observation data. However, a much more variability was observed when using images with a significant amount of aerosols or snow cover present.
 
-Additionally to optical satellite imagery, the method was also used to process Sentinel-1 SAR imagery. In a contrast to multispectral imagery, where NDWI was used to detect surface water, the backscatter amplitude was used to detect surface water in SAR imagery. Additionally, a speckle noise filter was implemented based on Perona-Malik to improve the quality of images and to decrease the number of spurious sharp edges which do not belong to surface water.
+Additionally to passive optical satellite imagery, the method was also adjusted to process Sentinel-1 SAR imagery. In contrast to multispectral imagery, where NDWI was used to detect surface water, for SAR imagery, the backscatter amplitude was used to detect surface water. To diminish effects of speckle noise in SAR imagery, a new implantation of speckle noise filter was implemented within Google Earth Engine based on Perona-Malik to improve the quality of images and to decrease the number of spurious sharp edges, not belonging to surface water.
 
-While dynamic local thresholding method presented in this chapter provides a way to very accurately estimate surface water masks, it is still insufficient to reliably estimate surface water mask when a significant amount of noise is present in the images. In fact, the accuracy of the resulting water masks varies a lot depending on the type of noise present in the image. The method shows very good performance in the case of homogeneously distributed noise, such as fog or haze. However, when a water body is partially covered by thick clouds or when it is partially covered by snow/ice - the results are less accurate, resulting in large variability of surface water estimates.
+While the method of dynamic local thresholding presented in this chapter provides a way to very accurately estimate surface water masks, it is still insufficient to reliably estimate surface water mask when surface water is only partially visible. In fact, the accuracy of the resulting water masks varies a lot depending on the type of noise present in the image. The method shows very good performance in the case of homogeneously distributed noise, such as fog or haze. However, for water bodies which are partially covered by thick clouds or snow/ice, the results are less accurate, causing significant variability of the final surface water area estimates.
 % PF <<
 
 In the next chapter, we will see how the resulting water mask can be further improved using Bayesian methods, where a combination of cloud-free historical images and the expected water mask, as shown in the figures \ref{fig:r1_canny_otsu} and \ref{fig:r1_canny_otsu_hand}, can be used to reliably estimate the surface area of the reservoir.
