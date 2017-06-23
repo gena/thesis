@@ -1,23 +1,23 @@
 \begin{titlepage}
 
 \begin{center}
-
-%% Extra whitespace at the top.
-\vspace*{2\bigskipamount}
-
-%% Print the title.
-{\makeatletter
-\titlestyle\bfseries\LARGE\@title
-\makeatother}
-
-%% Print the optional subtitle.
-{\makeatletter
-\ifx\@subtitle\undefined\else
-    \bigskip
-    \titlefont\titleshape\Large\@subtitle
-\fi
-\makeatother}
-
+	
+	%% Extra whitespace at the top.
+	\vspace*{2\bigskipamount}
+	
+	%% Print the title.
+	{\makeatletter
+		\titlestyle\bfseries\LARGE\@title
+		\makeatother}
+	
+	%% Print the optional subtitle.
+	{\makeatletter
+		\ifx\@subtitle\undefined\else
+		\bigskip
+		\titlefont\titleshape\Large\@subtitle
+		\fi
+		\makeatother}
+	
 \end{center}
 
 \cleardoublepage
@@ -25,82 +25,82 @@
 \thispagestyle{empty}
 
 \begin{center}
-
-%% The following lines repeat the previous page exactly.
-
-\vspace*{2\bigskipamount}
-
-%% Print the title.
-{\makeatletter
-\titlestyle\bfseries\LARGE\@title
-\makeatother}
-
-%% Print the optional subtitle.
-{\makeatletter
-\ifx\@subtitle\undefined\else
-    \bigskip
-    \titlefont\titleshape\Large\@subtitle
-\fi
-\makeatother}
-
-%% Uncomment the following lines to insert a vertically centered picture into
-%% the title page.
-%\vfill
-%\includegraphics{title}
-
-%% print the art
-\begin{center}
-	\begin{tikzpicture}[every node/.style={inner sep=0,outer sep=0}]
-	\node[draw=none,shade,blur shadow={shadow blur steps=5}] {
-		\includegraphics[width=1\textwidth]{01.2-water-detection/figures/art} 
-	};
 	
-	\end{tikzpicture}
-\end{center}
-
-
-\vfill
-
-%% Apart from the names and dates, the following text is dictated by the
-%% promotieregelement.
-
-{\Large\titlefont\bfseries Proefschrift}
-
-\bigskip
-\bigskip
-
-ter verkrijging van de graad van doctor
-
-aan de Technische Universiteit Delft,
-
-op gezag van de Rector Magnificus prof.~ir.~K.C.A.M.~Luyben,
-
-voorzitter van het College voor Promoties,
-
-in het openbaar te verdedigen op dinsdag 12 september 2017 om 10:00 uur
-
-\bigskip
-\bigskip
-
-
-\bigskip
-\bigskip
-
-%% Print the full name of the author.
-\makeatletter
-{\Large\titlefont\bfseries\@firstname\ {\titleshape\@lastname}}
-\makeatother
-
-\bigskip
-\bigskip
-
-Engineer-researcher, Master of Science in Radio Physics, \\
-Taras Shevchenko National University, Kiev, Ukraine, \\
-born in Lobachivka, Ukraine.
-
-%% Extra whitespace at the bottom.
-\vspace*{2\bigskipamount}
-
+	%% The following lines repeat the previous page exactly.
+	
+	\vspace*{2\bigskipamount}
+	
+	%% Print the title.
+	{\makeatletter
+		\titlestyle\bfseries\LARGE\@title
+		\makeatother}
+	
+	%% Print the optional subtitle.
+	{\makeatletter
+		\ifx\@subtitle\undefined\else
+		\bigskip
+		\titlefont\titleshape\Large\@subtitle
+		\fi
+		\makeatother}
+	
+	%% Uncomment the following lines to insert a vertically centered picture into
+	%% the title page.
+	%\vfill
+	%\includegraphics{title}
+	
+	%% print the art
+	\begin{center}
+		\begin{tikzpicture}[every node/.style={inner sep=0,outer sep=0}]
+		\node[draw=none,shade,blur shadow={shadow blur steps=5}] {
+			\includegraphics[width=1\textwidth]{01.2-water-detection/figures/art} 
+		};
+		
+		\end{tikzpicture}
+	\end{center}
+	
+	
+	\vfill
+	
+	%% Apart from the names and dates, the following text is dictated by the
+	%% promotieregelement.
+	
+	{\Large\titlefont\bfseries Proefschrift}
+	
+	\bigskip
+	\bigskip
+	
+	ter verkrijging van de graad van doctor
+	
+	aan de Technische Universiteit Delft,
+	
+	op gezag van de Rector Magnificus prof.~ir.~K.C.A.M.~Luyben,
+	
+	voorzitter van het College voor Promoties,
+	
+	in het openbaar te verdedigen op dinsdag 12 september 2017 om 10:00 uur
+	
+	\bigskip
+	\bigskip
+	
+	
+	\bigskip
+	\bigskip
+	
+	%% Print the full name of the author.
+	\makeatletter
+	{\Large\titlefont\bfseries\@firstname\ {\titleshape\@lastname}}
+	\makeatother
+	
+	\bigskip
+	\bigskip
+	
+	Engineer-researcher, Master of Science in Radio Physics, \\
+	Taras Shevchenko National University, Kiev, Ukraine, \\
+	born in Lobachivka, Ukraine.
+	
+	%% Extra whitespace at the bottom.
+	\vspace*{2\bigskipamount}
+	
 \end{center}
 
 \clearpage
@@ -112,8 +112,8 @@ born in Lobachivka, Ukraine.
 %% List the promotors (supervisors).
 \medskip\noindent
 \begin{tabular}{l}
-    promotor: Prof.\ dr.\ ir.\ N.\ C.\ van\ de\ Giesen \\
-    copromotor: Prof.\ dr.\ ir.\ E.\ Eisemann
+	promotor: Prof.\ dr.\ ir.\ N.\ C.\ van\ de\ Giesen \\
+	copromotor: Prof.\ dr.\ ir.\ E.\ Eisemann
 \end{tabular}
 
 \bigskip
@@ -123,19 +123,18 @@ born in Lobachivka, Ukraine.
 %% promotor(s) and ending with the reserve members.
 \medskip\noindent
 \begin{tabular}{p{5cm}l}
-    Rector Magnificus, & voorzitter \\
-
+	Rector Magnificus, & voorzitter \\
+	
 	Prof.\ dr.\ J.C.J.\ Kwadijk & University of Twente \\
-
-    Prof.\ dr.\ R.F.\ Hanssen & Delft University of Technology \\
-    
+	
+	Prof.\ dr.\ R.F.\ Hanssen & Delft University of Technology \\
+	
 	Prof.\ dr.\ ir.\ W.G.M. Bastiaanssen & Delft University of Technology / UNESCO-IHE \\
-
+	
 	Prof.\ dr.\ Z. (Bob)\ Su & University of Twente \\
-
-	Prof.\ dr.\ D.P.\ Solomatine & UNESCO-IHE \\    
-
-	Assoc. Prof. dr. D. Saah? & University of San Francisco \\ \url{https://www.usfca.edu/faculty/david-saah}
+		
+	dr. ir. H. C. Winsemius & Vrije Universiteit Amsterdam \\
+	
 \end{tabular}
 
 %% Include the following disclaimer for committee members who have contributed
@@ -148,23 +147,23 @@ born in Lobachivka, Ukraine.
 \vfill
 
 \begin{center}
-    \includegraphics[height=0.9in]{00.1-title/logos/tudelft}
-    \hspace{1em} 
-    \includegraphics[height=0.9in]{00.1-title/logos/deltares}
+	\includegraphics[height=0.9in]{00.1-title/logos/tudelft}
+	\hspace{1em} 
+	\includegraphics[height=0.9in]{00.1-title/logos/deltares}
 	\hspace{1em} \vspace{1em} 
 	\includegraphics[height=0.6in]{00.1-title/logos/e2o} 
-\hspace{1em}
+	\hspace{1em}
 	\includegraphics[height=1.0in]{00.1-title/logos/SERVIR-Mekong} 
 	\hspace{1em}
-    \includegraphics[height=0.4in]{00.1-title/logos/google} 
+	\includegraphics[height=0.4in]{00.1-title/logos/google} 
 \end{center}
 \vfill
 
 \noindent
 \begin{tabular}{@{}p{0.2\textwidth}@{}p{0.8\textwidth}}
-    \textit{Keywords:} & {surface water, multi-spectral satellite imagery, unsupervised machine learning, k-means, Canny's edge filter, NDWI, LANDSAT, SENTINEL, SRTM, HAND, Google Earth Engine} \\[\medskipamount]
-
-    \textit{Printed by:} & ... \\[\medskipamount]
+	\textit{Keywords:} & {surface water, multi-spectral satellite imagery, unsupervised machine learning, k-means, Canny's edge filter, NDWI, LANDSAT, SENTINEL, SRTM, HAND, Google Earth Engine} \\[\medskipamount]
+	
+	\textit{Printed by:} & ... \\[\medskipamount]
 \end{tabular}
 
 \vspace{4\bigskipamount}
