@@ -52,7 +52,7 @@ To demonstrate the variability of reflectance values in different bands for the 
 
 To address long-term surface water changes, we can first try to exclude short-term variability of reflectance values by computing average images for a long time intervals, excluding effects of clouds and cloud shadows in this way. By estimating this type of composite images for multiple time intervals, followed by the application of spectral water indices, such as NDWI, we should be able to reconstruct a long-term variability of the surface water changes, which will be reflected in the variability of the NDWI values. One of the important questions arising then using this method is how to select the best percentile, allowing to minimize the effect of clouds and cloud shadows, and at the same time, avoiding the appearance of the cloud of shadows in the images. 
 
-The method will work only if a sufficient number of observations is available. A large number of images is required to ensure that the distribution of values, used to compute reflectance percentile composites, converges to the actual distribution representing different land or atmosphere values for a given location.,  is based on similar distributions. Ideally, the resulting percentile should look the same for two areas when no long-term surface water changes take place. 
+The method will work only if a sufficient number of observations is available. A large number of images is required to ensure that the distribution of values, used to compute reflectance percentile composites, converges to the actual distribution representing different land or atmosphere values for a given location  is based on similar distributions. Ideally, the resulting percentile should look the same for two areas when no long-term surface water changes take place. 
 
 Because surface water has a very distinctive spectral signature, with a very low reflectance values in almost all bands, the presence of absence of water in a given pixel will be reflected in the final distribution represented as a probability distribution function (PDF) or a cumulative distribution function (CDF) for a given location.
 
@@ -81,7 +81,7 @@ A straightforward and efficient way to estimate long-term surface water changes 
 F(\rho) = \int_{-\infty}^{\rho^i} P(\rho)d\rho
 \end{equation}
 
-where $F$ - cumulative distribution function, superscript index $i$ denotes the $i^{th}$ percentile, $\rho$ - reflectance values for a given band.
+where $F$ - cumulative distribution function, the superscript index $i$ denotes the $i^{th}$ percentile, $\rho$ - reflectance values for a given band.
 
 Then, for every percentile reflectance value $\rho^i$, the spectral index is computed as an image:
 
@@ -89,7 +89,7 @@ Then, for every percentile reflectance value $\rho^i$, the spectral index is com
 I = \frac{\rho_{green}^i-\rho_{nir}^i}{\rho_{green}^i+\rho_{nir}^i} \\
 \end{equation}
 
-Then, the linear regression is performed on a set of all index values for all intervals $T$:
+After that, the linear regression is performed on a set of all index values for all intervals $T$:
 
 \begin{equation}
 I = \beta_0 + \beta_1 T + \epsilon
@@ -174,7 +174,7 @@ However, it may be difficult to reliably detect surface water changes when the f
 	\item \label{enum:changes-topo} complex topographic conditions combined with non-equally distributed sun parameters in different time intervals
 \end{enumerate}
 
-Some of these issues can be easy to address, for example, by changing empirically chosen percentile to make sure we capture pixels free from cloud and snow effects. This can be easily done.
+Some of these issues can be easily addressed, for example, by changing empirically chosen percentile to make sure we capture pixels free from cloud and snow effects.
 
 Additionally, image samples used to compute percentiles can also be selected only to represent only some seasons, where some of the effects are less present, filtering image collections by day-of-year or by sun parameters, to avoid the most evident topographic effects. 
 
