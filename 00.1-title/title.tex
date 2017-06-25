@@ -17,6 +17,16 @@
 		\titlefont\titleshape\Large\@subtitle
 		\fi
 		\makeatother}
+
+	%% print the art
+	\begin{center}
+		\begin{tikzpicture}[every node/.style={inner sep=0,outer sep=0}]
+		\node[draw=none,shade,blur shadow={shadow blur steps=5}] {
+			\includegraphics[width=1\textwidth]{01.2-water-detection/figures/art} 
+		};
+	
+		\end{tikzpicture}
+	\end{center}
 	
 \end{center}
 
@@ -47,16 +57,6 @@
 	%% the title page.
 	%\vfill
 	%\includegraphics{title}
-	
-	%% print the art
-	\begin{center}
-		\begin{tikzpicture}[every node/.style={inner sep=0,outer sep=0}]
-		\node[draw=none,shade,blur shadow={shadow blur steps=5}] {
-			\includegraphics[width=1\textwidth]{01.2-water-detection/figures/art} 
-		};
-		
-		\end{tikzpicture}
-	\end{center}
 	
 	
 	\vfill
