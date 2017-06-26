@@ -35,7 +35,10 @@
 
 \usepackage[utf8]{inputenc}
 
-\usepackage[numbers]{natbib}
+\usepackage[english]{babel}
+\usepackage{natbib}
+\bibliographystyle{abbrvnat}
+\setcitestyle{authoryear,open={((},close={))}}
 
 \usepackage{comment}
 
@@ -119,7 +122,8 @@
 
 \include{02.2-acknowledgments/acknowledgments}
 
-\bibliographystyle{dissertation}
+\bibliographystyle{apa}
+% \bibliographystyle{dissertation}
 \bibliography{dissertation}
 
 %% Turn off thumb indices for unnumbered chapters.
