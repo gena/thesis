@@ -2,20 +2,24 @@
 
 \label{intro}
 
-\dropcap{A}{ccurate}, efficient and high-resolution methods of surface water detection are needed to develop a better water management \st{policy}, provide input for hydrological and hydraulic models. \st{, and to deal with a plethora of satellite information becoming available for a steadily growing number of users}. \mycomment[JS]{The amount of data is unrelated to the first part of the scentence} Monitoring of surface water extent and dynamics is essential for a better understanding of natural processes, anthropogenic factors as well as climate change. \mycomment[JS]{MAybe somethin glike this?: This is becoming more important because Water resources are under pressure from economic sectors such as industry, agriculture, energy, tourism as well as domestic use. Furthermore, water availability is decreasing,  driving more regions into water insecurity [1]VN, UN-Water report Monitoring: Mapping Existing Global Systems \& Initiatives – Background document, 2006 [2] McDonald, R. I., et.al.. (2012). Urban growth, climate change, and freshwater availability. PNAS 108(15), 6312-6317.}
-Recent international agendas on climate change and environment demand objective information on planetary land and water surface conditions and changes, to be able to study the drivers behind them. The UN Sustainable Development Goals (GSDs) \mycomment[JS]{refer to http://www.un.org/ga/search/view\_doc.asp?symbol=A/RES/70/1\&Lang=E} define seventeen challenges to be achieved by 2030, and almost half of them will directly or indirectly require up to date and high-resolution information on surface water. To name some, sustainable management \st{of} for water and its use for food production, the role of the surface water for the spreading of deceases, climate change, and many other. 
+\dropcap{A}{ccurate}, efficient and high-resolution methods of surface water detection are needed for a better water management. Datasets on surface water extent and dynamics are crucial for a better understanding of natural and human-made processes, and as an input data for hydrological and hydraulic models. In spite of large progress in the harmonization of freely available satellite data, it remains accurate and efficient processing of higher level products remains inherently non-automatable.
+
+Monitoring of surface water extent and dynamics is essential for a better understanding of natural processes, anthropogenic factors as well as climate change. This is becoming more important because Water resources are under pressure from economic sectors such as industry, agriculture, energy, tourism as well as domestic use. Furthermore, water availability is decreasing,  driving more regions into water insecurity \citet{unfao2006watermonitoring, McDonald12042011}.
+
+Recent international agendas on climate change and environment demand objective information on planetary land and water surface conditions and changes, to be able to study the drivers behind them. The UN Sustainable Development Goals (GSDs) \citet{un2015resolution} define seventeen challenges to be achieved by 2030, and almost half of them will directly or indirectly require up to date and high-resolution information on surface water. To name some, sustainable management \st{of} for water and its use for food production, the role of the surface water for the spreading of deceases, climate change, and many other. 
 
 The Intergovernmental Panel on Climate Change (IPCC) in the Technical Paper VI on Climate Change and Water defines knowledge gaps in observations and our understanding of the behavior of water. Moreover, with the variety and volumes of Earth Observation (EO) data available today, these gaps frequently mean the lack of proper algorithms to process existing data. The raw data need to be processed properly to derive higher level variables easily interpretable by broader, frequently non-academic, community. 
 
-\mycomment[JS]{I would revisit this once the rest is done and zoom in on the significance of you work (it is!). You can start at the SDG, show how water resources are declining and how important it is to accurately know where water is at high resolution.. Something along those lines}
-
+%\mycomment[JS]{I would revisit this once the rest is done and zoom in on the significance of you work (it %is!). You can start at the SDG, show how water resources are declining and how important it is to accurately %know where water is at high resolution.. Something along those lines}
 
 \section{Research Questions}
 
-\mycomment[JS]{This is a key section. Make this simple and top the point}
-Many attempts have been made during the last decade to establish global scale surface water coverage and occurrence \mycomment[JS]{if you state this you also need to provide refs!}, but most of the studies so far were limited in spatial or temporal resolution, and accuracy. \st{Furthermore, numerous studies were performed to analyze surface water dynamics globally.} \st{ Still, many questions remain open, and the most important one is the lack of our understanding of how the surface water has been changing during the last decades, where EO data are available? }. \mycomment[JS]{No idea how to reformulate this but is read rather difficult } To answer this \st{bigger} question, the following questions need to be answered to address issues of global objectivity, accuracy, global applicability, and access by non-experts:\mycomment[JS]{Non experts????? why? } 
+% \mycomment[JS]{This is a key section. Make this simple and top the point}
 
-\mycomment[JS]{Now we are getting to the point. I would rewrite the above to be an introduction to these points. Now is seems like an extension of the previous section.... What you list below are the points you deal with in your thesis but they are not properly introduced (from literature)}
+Many attempts have been made during the last decade to establish global scale surface water coverage and occurrence \citet{nasa2003water, lehner2004development, feng2016global, yamazaki2015development}, but most of the studies so far were limited in spatial or temporal resolution, and accuracy. Still, many questions remain open, and the most important one is the lack of our understanding of how the surface water has been changing during the last decades.
+
+Accurate and fully automated detection of surface water from multi-temporal satellite data at high spatial resolution is hard. For efficient and accurate surface water detection from EO data, we need to address issues of global objectivity, accuracy, applicability, as well as provide access for a broad range of users. In the present study, this will be done by answering the following questions:
+
 What are limits in automated surface water detection methods, where no manual tuning is required?
 
 How to deal with typical issues if you wish to do automated classification, accounting for clouds, hill shadows, snow/ice and mixed urban and rural areas?
@@ -28,10 +32,8 @@ How to streamline the use of satellite images measured from different passive op
 
 How to put these analysis methods in the hands of stakeholders so that they can tailor their analysis to their needs and area of interest?
 
-These are the central questions addressed \st {here} in this thesis.
+What is the value of combining EO data measured by different satellites?
 
-Even though most of the methods developed during this research were applied to process multispectral satellite imagery, some of them are also applicable to process other types of imagery, such as backscatter information generated by synthetic aperture radar (SAR) sensors.
-\mycomment[JS]{Good paragraph but is seems a bit lost and out of place here...}
 
 \bigskip
 
@@ -59,6 +61,8 @@ The contributions can be summarized as follows:
 	\item Permanent surface water mask for Murray-Darling basin is estimated using the method $M_1$, Height Above the Nearest Drainage (HAND), and supervised classification for topographically difficult areas. The resulting surface water mask is made available for inspection in the form of a website (\url{http://osm-water.appspot.com}). The water mask developed for Murray-Darling River Basin was compared to the surface water vector dataset extracted from OpenStreetMap dataset and potential water mask derived from the 30m digital elevation model (SRTM). The positional accuracy of the rivers is estimated for three river datasets, and the results are discussed with regards to overall surface water coverage and positional differences.    
 \end{itemize}
 
+Even though most of the methods developed during this research were applied to process multispectral satellite imagery, some of them are also applicable to process other types of imagery, such as backscatter information generated by synthetic aperture radar (SAR) sensors.
+
 The algorithms presented in this research were successfully applied to develop various surface water datasets and software tools, allowing more accurate detection of surface water and contributing to a better understanding of the Earth's surface water extent and dynamics.
 
 A crucial aspect is also related to simplicity and reproducibility of the methods so they can be easily extended to new datasets and will optimally use existing technical infrastructure. In the present research, all of the methods are shared with the community with a very permissive license, to ensure it can be easily reused and extended.
@@ -84,5 +88,3 @@ In the next Chapter \ref{ch4}, a simple, yet powerful method ($M_3$) will be int
 The next Chapter \ref{ch7} demonstrates the use of the methods developed in Chapter \ref{ch2} to derive permanent surface water mask for 2013-2015 for Murray-Darling River Basin in Australia. Three surface water masks will be compared, derived from three different alternative sources: 30m multispectral satellite imagery (Landsat 8), OpenStreetMap and SRTM. Here, a stepwise approach to detect permanent surface water from percentile composite images will be applied to analyze images measured by Landsat 8 mission. We will also see how HAND dataset can be used as a topographic mask to detect mountainous areas where commission error of surface water detection is present. The resulting water mask is then refined using a supervised classification method based on classification and regression trees (CART), to perform the final clean-up of the dataset.
 
 Concluding, in the last Chapter \ref{ch8-conclusion} summarized the main findings, existing challenges and trends related to methods of surface water detection as well as to the Earth Observation (EO) in general.
-
-
