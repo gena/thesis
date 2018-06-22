@@ -3,6 +3,8 @@
 
 %\usepackage{microtype}
 
+\usepackage[acronym]{glossaries}
+
 \usepackage{amsmath}
 \usepackage{gensymb}
 
@@ -40,9 +42,16 @@
 \bibliographystyle{abbrvnat}
 %\setcitestyle{authoryear}
 
+\usepackage{bibentry}
+\nobibliography*
 
 \usepackage{comment}
 
+% show sources
+\usepackage[source]{optional}
+
+% no sources
+% \usepackage[no_source]{optional}
 
 \usepackage{tikz}
 
@@ -77,6 +86,39 @@
 
 \setlength{\marginparwidth}{2cm}    
 
+% abbreviations:
+\newacronym{HAND}{HAND}{Height above the nearest drainage}
+\newacronym{SRTM}{SRTM}{Shuttle Radar Topography Mission}
+\newacronym{NED}{NED}{National Elevation Dataset}
+\newacronym{NDWI}{NDWI}{Normalized Difference Water Index}
+\newacronym{MNDWI}{MNDWI}{Modified Normalized Difference Water Index}
+\newacronym{NDVI}{NDVI}{Normalized Difference Vegetation Index}
+\newacronym{NDSI}{NDSI}{Normalized Difference Snow Index}
+\newacronym{SAR}{SAR}{Synthetic Aperture Radar}
+\newacronym{InSAR}{InSAR}{Interferometric Synthetic Aperture Radar}
+\newacronym{AWEI}{AWEI}{Automated Water Extraction Index}
+\newacronym{HSV}{HSV}{Hue Saturation Value}
+\newacronym{LOWESS}{LOWESS}{Locally Weighted Scatterplot Smoothing}
+\newacronym{OSM}{OSM}{OpenStreetMap}
+\newacronym{VGI}{VGI}{Volunteered Geographic Information}
+\newacronym{EO}{EO}{Earth Observation}
+\newacronym{CART}{CART}{Classification And Regression Tree}
+\newacronym{IPCC}{IPCC}{Intergovernmental Panel on Climate Change}
+\newacronym{SDG}{SDGs}{Sustainable Development Goals}
+\newacronym{KDE}{KDE}{Kernel Density Estimation}
+\newacronym{PGM}{PGM}{Probabilistic Graphical Model}
+\newacronym{CPD}{CPD}{Conditional Probability Distribution}
+\newacronym{BN}{BN}{Bayesian Network}
+\newacronym{MRF}{MRF}{Markov Random Field}
+\newacronym{CRF}{CRF}{Conditional Random Field}
+\newacronym{DAG}{DAG}{Directed Acyclic Graph}
+\newacronym{MCMC}{MCMC}{Markov Chain Monte Carlo}
+\newacronym{EM}{EM}{Expectation Minimization}
+\newacronym{PDF}{PDF}{Probability Distribution Functions}
+
+\makeglossaries
+
+
 \begin{document}
 
 %% Specify the title and author of the thesis. This information will be used on
@@ -98,6 +140,10 @@
 
 \tableofcontents
 
+\addcontentsline{toc}{chapter}{Acronyms}
+\setheader{Acronyms}
+\printglossary[type=\acronymtype,title=Acronyms]
+
 \include{00.2-summary/summary}
 
 %% Use Arabic numerals for the page numbers of the chapters.
@@ -113,27 +159,39 @@
 \include{01.4-change-detection/change-detection}
 \include{01.8-aqua-monitor/aqua-monitor}
 \include{01.9-water-murray-darling/water-australia-osm}
+
 \include{02.1-conclusions/conclusion}
+
 \include{02.2-acknowledgments/acknowledgments}
 
-%% Use letters for the chapter numbers of the appendices.
-\appendix
-
+\appendix % Use letters for the chapter numbers of the appendices.
 \include{01.2-water-detection/appendix-a}
-\include{01.8-aqua-monitor/appendix-a}
+
+% see website
+% \include{01.8-aqua-monitor/appendix-a}
 
 \include{03.1-publications/publications}
+% \include{propositions}
 
-\include{02.2-acknowledgments/acknowledgments}
-
-\bibliographystyle{apa}
-% \bibliographystyle{dissertation}
+%\bibliographystyle{apa}
+\bibliographystyle{dissertation}
 \bibliography{dissertation}
+
 
 %% Turn off thumb indices for unnumbered chapters.
 \thumbfalse
 
 \end{document}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -144,7 +202,7 @@
 * check "we ...", change to "I ..." or "it ..." where appropriate
 
 * check Chapter <> chapter 
-+ check \ref{ch1} where Chapter needs to be added
++ check \ref{ch2} where Chapter needs to be added
 * check Figure <> figure
 * check \ref{fig:} where Figure needs to be added
 

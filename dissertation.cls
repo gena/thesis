@@ -341,11 +341,11 @@
     \vspace*{2.6pt}%
 }
 
-%% A part title starts with a huge (96pt) bold black number, flushed to the
+%% A part title starts with a huge (80pt) bold black number, flushed to the
 %% right, followed by the part name on the next line in the title color.
 \titleformat{\part}[display]
     {\flushright\titlestyle}
-    {\fontsize{96pt}{96pt}\selectfont\bfseries\thepart}
+    {\fontsize{80pt}{80pt}\selectfont\bfseries\thepart}
     {0pt}
     {\Huge\color{title}}
 %% Separate the title from the text by two empty lines.
@@ -357,7 +357,7 @@
 %% Chapter titles have the same layout as parts.
 \titleformat{\chapter}[display]
     {\flushright\titlestyle}
-    {\fontsize{96pt}{96pt}\selectfont\bfseries\thechapter}
+    {\fontsize{80pt}{80pt}\selectfont\bfseries\thechapter}
     {0pt}
     {\Huge\color{title}}
 \titlespacing{\chapter}{0pt}{0pt}{2\baselineskip}
